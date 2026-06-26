@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The 9,484 Session Hour: Anatomy of a Coordinated SSH Scanning Event | Vinayak Tyagi</title>
+  <meta name="description" content="Threat Intel Report: Analysis of a massive 9,484 SSH session intrusion event in a single hour on the MIRAGE honeypot, detailing scanner profiles, credential patterns, and infrastructure coordination.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* Design Tokens */
+    :root {
+      --bg-color: #080809;
+      --panel-bg: #0f0f11;
+      --panel-border: #1f1f23;
+      --panel-border-hover: #2e2e35;
+
+      --text-primary: #e2e8f0;
+      --text-secondary: #8a8a93;
+      --text-muted: #52525b;
+
+      --accent-cyan: #00fff0;
+      --accent-green: #00ff41;
+
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    /* Reset & Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+    }
+
+    body {
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Layout Utility */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    .article-container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* Typography Utilities */
+    .mono {
+      font-family: var(--font-mono);
+    }
+
+    .accent-cyan-text {
+      color: var(--accent-cyan);
+    }
+
+    .accent-green-text {
+      color: var(--accent-green);
+    }
+
+    /* Navigation */
+    header {
+      border-bottom: 1px solid var(--panel-border);
+      position: sticky;
+      top: 0;
+      background-color: rgba(8, 8, 9, 0.9);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 64px;
+    }
+
+    .logo {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .nav-links a:hover {
+      color: var(--accent-cyan);
+    }
+
+    /* Article Layout */
+    .article-wrapper {
+      padding: 4rem 0 6rem 0;
+    }
+
+    .back-link {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .back-link:hover {
+      color: var(--accent-cyan);
+    }
+
+    .article-meta {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent-cyan);
+      margin-bottom: 1.25rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 2.5rem;
+      color: var(--text-primary);
+    }
+
+    h2 {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 3rem;
+      margin-bottom: 1.25rem;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 0.5rem;
+    }
+
+    p {
+      font-size: 0.975rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      text-align: justify;
+    }
+
+    /* Monospace Code blocks */
+    .data-block {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      padding: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.825rem;
+      color: var(--accent-cyan);
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      line-height: 1.5;
+    }
+
+    /* Bullet List */
+    ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--text-secondary);
+      font-size: 0.975rem;
+    }
+
+    li {
+      margin-bottom: 0.75rem;
+    }
+
+    li strong {
+      color: var(--text-primary);
+    }
+
+    /* External link styling */
+    .inline-link {
+      color: var(--accent-cyan);
+      border-bottom: 1px dashed var(--accent-cyan);
+    }
+
+    .inline-link:hover {
+      border-bottom-style: solid;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--panel-border);
+      padding: 2rem 0;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 4rem;
+    }
+
+    .footer-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 1.75rem;
+      }
+      .nav-links {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container nav-container">
+      <div class="logo">
+        <a href="../index.html">VT<span class="accent-cyan-text">:_</span></a>
+      </div>
+      <nav class="nav-links">
+        <a href="../index.html">← BACK TO HOME</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Article Body -->
+  <div class="article-wrapper">
+    <article class="article-container">
+
+      <a href="../index.html" class="back-link">← vtyagi.dev</a>
+
+      <div class="article-meta">THREAT INTEL · JUNE 2026 · 6 MIN READ</div>
+
+      <h1>The 9,484 Session Hour: Anatomy of a Coordinated SSH Scanning Event</h1>
+
+      <p>
+        At 14:00 UTC on June 20, 2026, the MIRAGE Frankfurt sensor recorded 9,484 SSH intrusion sessions in a single hour — more than five times the dataset average of approximately 1,800 sessions per hour. The spike lasted exactly 60 minutes and then stopped. This post documents what the data shows about the infrastructure behind it.
+      </p>
+
+      <h2>THE NUMBERS</h2>
+
+      <p>
+        The hour-14 UTC spike is the single largest traffic event in the 11-day MIRAGE capture window. For context:
+      </p>
+
+      <ul>
+        <li><strong>Dataset average:</strong> ~1,800 sessions/hour</li>
+        <li><strong>Hour 14 UTC:</strong> 9,484 sessions</li>
+        <li><strong>Multiplier:</strong> 5.3x the average</li>
+      </ul>
+
+      <p>
+        The spike was not distributed across many IPs arriving simultaneously. It was dominated by a single source:
+      </p>
+
+      <pre class="data-block">
+IP              | Sessions | Avg Duration | Window
+45.74.0.24      | 7,562    | 169ms        | 14:19–14:47 (27 min)
+176.65.132.17   | 622      | 129ms        | 14:26–14:59
+176.65.139.102  | 511      | 163ms        | 14:00–14:59
+176.65.139.249  | 427      | 195ms        | 14:00–14:54
+91.92.42.64     | 255      | 3,401ms      | 14:00–14:59</pre>
+
+      <p>
+        45.74.0.24 alone accounts for 79.8% of the hour's traffic. It fired 7,562 sessions in 27 minutes — approximately 4.7 sessions per second sustained for the entire window — then stopped completely at 14:47.
+      </p>
+
+      <h2>TWO DISTINCT SCANNER PROFILES</h2>
+
+      <p>
+        The data reveals two behaviorally distinct scanner classes operating simultaneously during hour 14.
+      </p>
+
+      <p>
+        <strong>Profile A — High-velocity, short-duration (45.74.0.24, 176.65.132.x):</strong><br>
+        Average session duration: 129–195ms<br>
+        Sessions per minute: sustained high rate<br>
+        Behavior: connect, submit one credential, disconnect immediately<br>
+        This is pure credential stuffing at maximum throughput. The 169ms average duration for 45.74.0.24 is below the TCP handshake + SSH negotiation + auth round-trip floor for most connections — suggesting the scanner is optimized to minimize time-per-attempt above all else.
+      </p>
+
+      <p>
+        <strong>Profile B — Lower-velocity, longer-duration (91.92.42.64, 91.92.40.240):</strong><br>
+        Average session duration: 1,987–3,401ms<br>
+        Sessions per minute: ~4 (one every ~14 seconds)<br>
+        Behavior: connect, wait, submit credential, disconnect
+      </p>
+
+      <p>
+        91.92.42.64 maintained 14-second intervals almost exactly, consistent with a configured rate limiter — possibly to avoid triggering fail2ban or similar defenses on target infrastructure. The 3,401ms average duration suggests this scanner waits for a full server response before proceeding.
+      </p>
+
+      <p>
+        These two profiles operating simultaneously from different IPs suggests coordinated infrastructure with differentiated roles: one component floods at maximum rate while another probes more carefully.
+      </p>
+
+      <h2>THE CREDENTIAL PATTERNS</h2>
+
+      <p>
+        The credentials attempted during the spike reveal something unexpected. The top attempts during hour 14 included:
+      </p>
+
+      <pre class="data-block">
+username: claude    credential: claude        (4 attempts)
+username: claude    credential: 123           (4 attempts)
+username: claude    credential: claude123     (4 attempts)
+username: claude    credential: password      (4 attempts)
+username: pi        credential: 12345678      (5 attempts)
+username: postgres  credential: 123           (5 attempts)
+username: crafty    credential: 12345678      (4 attempts)</pre>
+
+      <p>
+        The claude username targeting is notable. claude is not a standard Linux system username and does not appear in common wordlists for generic credential stuffing. Its presence suggests either a purpose-built wordlist targeting Anthropic-adjacent infrastructure naming conventions, or an unusually comprehensive general wordlist that includes names unlikely to appear on most servers.
+      </p>
+
+      <h2>WHAT STOPPED IT</h2>
+
+      <p>
+        At 14:47 UTC, 45.74.0.24 stopped. Not gradually — completely. The session rate from that IP dropped to zero inside one minute. The remaining IPs continued at their lower baseline rates through the rest of the hour.
+      </p>
+
+      <p>
+        This termination pattern — abrupt, complete, time-bounded — is consistent with a scheduled job completing its run rather than a human operator deciding to stop. The 27-minute window for 7,562 sessions suggests a pre-configured batch size or time limit was reached.
+      </p>
+
+      <h2>INFRASTRUCTURE CONTEXT</h2>
+
+      <p>
+        45.74.0.24 is part of a cluster that appears repeatedly in the MIRAGE dataset. Earlier analysis identified coordinated IPs across 3 Dutch ASNs with mathematically symmetric session counts (1,522 and 761 exact counts across multiple IPs). 45.74.0.24 with 7,562 sessions sits outside that symmetric pattern — suggesting it operates at a higher tier within the same infrastructure, handling burst scanning while the symmetric-count IPs maintain steady-state coverage.
+      </p>
+
+      <h2>WHAT THIS TELLS US</h2>
+
+      <p>
+        Three conclusions from the hour-14 data:
+      </p>
+
+      <p>
+        1. <strong>The infrastructure is tiered.</strong> Different IPs within the same botnet operate at different rates, with different session durations, suggesting role differentiation — bulk scanners and careful probers coordinated from the same C2.
+      </p>
+
+      <p>
+        2. <strong>The scanning is scheduled.</strong> Abrupt starts and stops on minute boundaries, pre-configured batch sizes, and consistent inter-session intervals all point to automated orchestration rather than manual operation.
+      </p>
+
+      <p>
+        3. <strong>Wordlists are broader than expected.</strong> The claude username in a scanning event at this scale suggests operators are using wordlists comprehensive enough to include non-standard usernames that would only matter against specific infrastructure.
+      </p>
+
+      <h2>DATASET</h2>
+
+      <p>
+        All findings derived from the MIRAGE honeypot dataset: 44,118 sessions, June 16–26 2026, Frankfurt sensor. Source:
+        <a href="https://github.com/Mirage-Source/mirage-core" target="_blank" rel="noopener noreferrer" class="inline-link">https://github.com/Mirage-Source/mirage-core</a>
+      </p>
+
+    </article>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-container">
+      <div>VINAYAK TYAGI &copy; 2026</div>
+      <div>SEC_OPS // FRANKFURT_NODE_ACTIVE</div>
+    </div>
+  </footer>
+
+</body>
+</html>

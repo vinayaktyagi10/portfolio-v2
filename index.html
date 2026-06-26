@@ -642,7 +642,7 @@
 
     .writing-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 2rem;
       max-width: 100%;
     }
@@ -750,6 +750,10 @@
         grid-template-columns: 1fr;
         gap: 1.5rem;
       }
+
+      .writing-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     @media (max-width: 768px) {
@@ -833,11 +837,11 @@
       <div class="stats-grid">
         <div class="stat-item">
           <span class="stat-label">TOTAL SESSIONS:</span>
-          <span class="stat-val" id="stat-total">44,101+</span>
+          <span class="stat-val" id="stat-total">44,118+</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">UNIQUE IPS:</span>
-          <span class="stat-val" id="stat-ips">96</span>
+          <span class="stat-val" id="stat-ips">97</span>
         </div>
         <div class="stat-item">
           <span class="stat-label">TOP TARGET:</span>
@@ -920,7 +924,7 @@ TCP :22 ── SSH Handshake ── Fake Shell (Go)
       <div class="mirage-actions">
         <button class="btn btn-primary" id="btn-live-intel">Live Threat Intel →</button>
         <button class="btn btn-primary" id="btn-read-paper">Read the Paper →</button>
-        <a href="https://github.com/vinayaktyagi10/mirage" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub Project →</a>
+        <a href="https://github.com/Mirage-Source/mirage-core" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub Project →</a>
       </div>
 
       <div class="stack-badges">
@@ -982,12 +986,12 @@ TCP :22 ── SSH Handshake ── Fake Shell (Go)
             <div class="paper-section-title">KEY DESIGN HIGHLIGHTS</div>
             <p class="paper-text">
               1. <strong>Go Engine Implementation:</strong> By utilizing the native <code class="mono">golang.org/x/crypto/ssh</code> stack, MIRAGE handles high concurrency loads with minimal memory footprints, serving fake pseudo-terminal shells to attackers without exposing Host OS kernels.<br>
-              2. <strong>Distributed Sensors:</strong> Decoupled sensors transmit structured STIX 2.1 JSON payloads back to a centralized PostgreSQL cluster using Cloudflare tunnels, preserving absolute threat isolation.
+              2. <strong>Distributed Sensors:</strong> Single sensor deployed on a Frankfurt VPS transmits structured STIX 2.1 JSON payloads to PostgreSQL via Cloudflare tunnel, preserving absolute threat isolation.
             </p>
 
             <div class="paper-section-title">EXPERIMENTAL FINDINGS</div>
             <p class="paper-text">
-              Evaluating 44,101 raw connection profiles over a multi-month capture cycle, we isolate a dominant botnet infrastructure running Go scanner code and attempting known blockchain validator root configurations. The mathematical symmetry of attempts suggests centralized orchestration across geographically distributed hosting platforms.
+              Evaluating 44,101 raw connection profiles over a 11-day capture cycle, we isolate a dominant botnet infrastructure running Go scanner code and attempting known blockchain validator root configurations. The mathematical symmetry of attempts suggests centralized orchestration across geographically distributed hosting platforms.
             </p>
           </div>
         </div>
@@ -1082,6 +1086,20 @@ TCP :22 ── SSH Handshake ── Fake Shell (Go)
             </p>
           </div>
           <div class="btn btn-secondary" style="margin-top: auto; align-self: flex-start;">Read Report →</div>
+        </a>
+
+        <!-- Second Active Blog Card -->
+        <a href="blog/hour-14-spike.html" class="blog-preview-card">
+          <div>
+            <span class="blog-meta">THREAT INTEL · JUNE 2026</span>
+            <h3 class="blog-title">The 9,484 Session Hour: Anatomy of a Coordinated SSH Scanning Event</h3>
+            <p class="blog-summary">
+              At 14:00 UTC, a single IP fired 7,562 sessions in 27 minutes. What the timing, duration variance, and credential patterns reveal about coordinated botnet infrastructure...
+            </p>
+          </div>
+          <div class="btn btn-secondary" style="margin-top: auto; align-self: flex-start;">
+            Read Report →
+          </div>
         </a>
 
         <!-- Disabled Blog Card -->
