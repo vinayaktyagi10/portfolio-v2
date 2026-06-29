@@ -1,0 +1,285 @@
+/* GAMES PAGE STYLING */
+
+:root {
+  --bg-dark: #0a0604;
+  --bg-card: #130d0a;
+  --bg-input: #1a120e;
+  --border-glow: #d4541a55;
+  --brand-orange: #d4541a;
+  --text-primary: #faf8f4;
+  --text-muted: #9a8e84;
+  --text-dark: #6b5f59;
+  --green-glow: #4ade80;
+}
+
+body.games-theme {
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* NAVBAR ADJUSTMENTS */
+.navbar-dark {
+  background: rgba(10, 6, 4, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #1a120e;
+}
+
+.navbar-dark .logo {
+  color: var(--text-primary);
+}
+
+.navbar-dark .nav-link {
+  color: var(--text-muted);
+}
+
+.navbar-dark .nav-link:hover {
+  color: var(--text-primary);
+}
+
+/* HERO SECTION */
+.games-hero {
+  padding-top: 80px;
+  padding-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.games-hero-blob {
+  position: absolute;
+  top: -150px;
+  right: -50px;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(212, 84, 26, 0.12) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.games-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 700;
+  letter-spacing: -.03em;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+.games-title span {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--brand-orange);
+}
+
+.games-subtitle {
+  font-size: 16px;
+  color: var(--text-muted);
+  max-width: 60ch;
+  line-height: 1.6;
+}
+
+
+
+/* GAME GRID */
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  margin-bottom: 80px;
+}
+
+.game-item-card {
+  background: var(--bg-card);
+  border: 1px solid #1e1511;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.28s, box-shadow 0.28s;
+}
+
+.game-item-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--brand-orange);
+  box-shadow: 0 12px 30px rgba(212, 84, 26, 0.15);
+}
+
+/* Cover Art */
+.game-item-cover-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  background: #19120e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-item-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s;
+}
+
+.game-item-card:hover .game-item-cover {
+  transform: scale(1.04);
+}
+
+.game-item-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(10, 6, 4, 0.95) 100%);
+  pointer-events: none;
+}
+
+/* Fallback Cover */
+.game-cover-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+  background: linear-gradient(135deg, #1b110b 0%, #30170a 100%);
+}
+
+.game-fallback-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.game-fallback-title {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Badges on Cover */
+.game-badges-container {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.verdict-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--brand-orange);
+  color: var(--text-primary);
+  padding: 4px 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+
+.status-badge {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: rgba(10, 6, 4, 0.8);
+  border: 1px solid #2d1e17;
+  color: var(--text-muted);
+  padding: 4px 10px;
+  backdrop-filter: blur(4px);
+}
+
+.status-badge.status-playing {
+  color: var(--green-glow);
+  border-color: rgba(74, 222, 128, 0.4);
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.15);
+}
+
+/* Card Info */
+.game-item-info {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-item-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+.game-rating {
+  display: flex;
+  gap: 3px;
+  color: #ffaa00;
+  margin-bottom: 12px;
+}
+
+.game-rating svg {
+  fill: currentColor;
+}
+
+.game-review {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  flex-grow: 1;
+}
+
+/* Empty State */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px 20px;
+  border: 1px dashed #2a1a12;
+  color: var(--text-muted);
+}
+
+.empty-state-icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+  color: var(--text-dark);
+}
+
+.empty-state-text {
+  font-size: 15px;
+}
+
+.footer-dark {
+  background: #060403;
+  border-top: 1px solid #130d0a;
+}
+
+/* RESPONSIVE LAYOUT OVERRIDES */
+@media (max-width: 768px) {
+  .games-hero {
+    padding-top: 40px;
+    padding-bottom: 20px;
+  }
+  
+  .games-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .games-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}

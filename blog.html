@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Logs & Writeups — Vinayak Tyagi</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+  <!-- Shared styles first, then blog-specific styles -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="blog.css">
+  <!-- Preloader script to prevent light mode flash on reload if dark theme is active -->
+  <script>if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark');</script>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="logo">vt<span style="color:#d4541a;">.</span></a>
+      <div class="nav-links">
+        <a href="index.html#work" class="nav-link">Work</a>
+        <a href="index.html#about" class="nav-link">About</a>
+        <a href="blog.html" class="nav-link active">Blog</a>
+        <a href="https://github.com/vinayaktyagi10" target="_blank" rel="noopener" class="nav-link">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+          <span class="nav-text">GitHub</span>
+        </a>
+        <a href="resume.pdf" target="_blank" rel="noopener" class="nav-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span class="nav-text">Resume</span>
+        </a>
+        <button id="theme-toggle" class="nav-link" style="background: none; border: none; cursor: pointer; padding: 8px; display: inline-flex; align-items: center; justify-content: center;" aria-label="Toggle dark mode">
+          <svg class="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <svg class="theme-icon-sun" style="display: none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        </button>
+        <a href="index.html#contact" class="btn btn-primary" style="margin-left: 6px;">Say hi</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="blog-hero section-container">
+    <div class="blog-hero-blob"></div>
+    <div class="badge" style="margin-bottom: 24px;">Systems &amp; Security</div>
+    <h1 class="blog-title">Logs &amp; <span>Writeups.</span></h1>
+    <p class="blog-subtitle">
+      Deep dives into network architecture, security vulnerability analysis, and engineering incident responses.
+    </p>
+  </header>
+
+  <!-- MAIN CATALOG -->
+  <main class="section-container" style="padding-top: 0;">
+    <!-- Controls (Search + Filters) -->
+    <div class="controls-bar">
+      <div class="search-wrapper">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="blog-search" class="search-input" placeholder="Search writeups by title, tag, content...">
+      </div>
+      <div class="filter-group">
+        <button class="filter-btn active" data-filter="all">All Logs</button>
+        <button class="filter-btn" data-filter="security">Security</button>
+        <button class="filter-btn" data-filter="systems">Systems</button>
+        <button class="filter-btn" data-filter="docker">Docker</button>
+      </div>
+    </div>
+
+    <!-- Articles Layout -->
+    <div id="blog-layout" class="blog-layout">
+      <!-- Loaded dynamically by blog.js -->
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-container">
+      <span class="footer-text">© 2026 Vinayak Tyagi · <a href="blog.html" style="color: inherit; text-decoration: none; border-bottom: 1px dashed #d4541a33; transition: color 0.2s;" onmouseover="this.style.color='#d4541a'" onmouseout="this.style.color='inherit'">Blog</a> · <a href="games.html" style="color: inherit; text-decoration: none; border-bottom: 1px dashed #d4541a33; transition: color 0.2s;" onmouseover="this.style.color='#d4541a'" onmouseout="this.style.color='inherit'">Game Shelf</a></span>
+      <span class="footer-logo">vt<span>.</span></span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="blog-data.js"></script>
+  <script src="blog.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

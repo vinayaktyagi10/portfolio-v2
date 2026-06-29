@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>404 — Route Not Found</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+  <!-- Inline SVG favicon for warning/404 page -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚠️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .error-container {
+      min-height: calc(100vh - 120px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    
+    .error-code {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(80px, 15vw, 150px);
+      font-weight: 800;
+      color: #d4541a;
+      line-height: 1;
+      margin-bottom: 10px;
+      letter-spacing: -0.05em;
+    }
+    
+    .error-subtitle {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: #faf8f4;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 20px;
+    }
+    
+    .error-text {
+      color: #a09088;
+      max-width: 48ch;
+      font-size: 15px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+  </style>
+</head>
+<body style="background:#0a0705; color:#faf8f4;">
+
+  <!-- NAV -->
+  <nav class="navbar" style="background: rgba(10, 7, 5, 0.88); border-bottom: 1px solid #1a120e;">
+    <div class="nav-container">
+      <a href="index.html" class="logo">vt<span style="color:#d4541a;">.</span></a>
+    </div>
+  </nav>
+
+  <!-- MAIN ERROR CONTENT -->
+  <main class="error-container">
+    <div class="error-code">404</div>
+    <div class="error-subtitle">Route Not Found</div>
+    <p class="error-text">
+      It looks like you've wandered into an unmapped sector of my servers. The honeypot didn't catch this file, but my system logged the mismatch. Let's redirect you back to safety.
+    </p>
+    <a href="index.html" class="btn btn-primary">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: rotate(180deg);"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      Back to homepage
+    </a>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer footer-dark" style="background:#060403; border-top:1px solid #130d0a;">
+    <div class="footer-container">
+      <span class="footer-text" style="color: #4a3e35;">© 2026 Vinayak Tyagi · <a href="blog.html" style="color: inherit; text-decoration: none; border-bottom: 1px dashed #d4541a33; transition: color 0.2s;" onmouseover="this.style.color='#d4541a'" onmouseout="this.style.color='inherit'">Blog</a> · <a href="games.html" style="color: inherit; text-decoration: none; border-bottom: 1px dashed #d4541a33; transition: color 0.2s;" onmouseover="this.style.color='#d4541a'" onmouseout="this.style.color='inherit'">Game Shelf</a></span>
+      <div class="footer-logo" style="color: #4a3e35;">
+        vt<span>.</span>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

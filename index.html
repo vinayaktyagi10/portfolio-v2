@@ -1,1277 +1,444 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vinayak Tyagi | Systems Security Engineer & Student</title>
-  <meta name="description" content="Portfolio of Vinayak Tyagi, CS student at Manipal University Jaipur & security researcher. Creator of MIRAGE, a live SSH honeypot & threat intel pipeline.">
-
-  <!-- Fonts -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vinayak Tyagi — Systems & Security Engineer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-  <style>
-    /* Design Tokens */
-    :root {
-      --bg-color: #080809;
-      --panel-bg: #0f0f11;
-      --panel-border: #1f1f23;
-      --panel-border-hover: #2e2e35;
-
-      --text-primary: #e2e8f0;
-      --text-secondary: #8a8a93;
-      --text-muted: #52525b;
-
-      --accent-cyan: #00fff0;
-      --accent-green: #00ff41;
-
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --font-mono: 'JetBrains Mono', monospace;
-    }
-
-    /* Reset & Base Styles */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      scroll-behavior: smooth;
-      background-color: var(--bg-color);
-      color: var(--text-primary);
-      font-family: var(--font-sans);
-      line-height: 1.6;
-    }
-
-    body {
-      overflow-x: hidden;
-      position: relative;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-      transition: color 0.2s ease, border-color 0.2s ease;
-    }
-
-    /* Layout Utility */
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 1.5rem;
-    }
-
-    /* Typography Utilities */
-    .mono {
-      font-family: var(--font-mono);
-    }
-
-    .accent-cyan-text {
-      color: var(--accent-cyan);
-    }
-
-    .accent-green-text {
-      color: var(--accent-green);
-    }
-
-    /* Navigation */
-    header {
-      border-bottom: 1px solid var(--panel-border);
-      position: sticky;
-      top: 0;
-      background-color: rgba(8, 8, 9, 0.9);
-      backdrop-filter: blur(8px);
-      z-index: 100;
-    }
-
-    .nav-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      height: 64px;
-    }
-
-    .logo {
-      font-family: var(--font-mono);
-      font-weight: 600;
-      font-size: 0.95rem;
-      letter-spacing: -0.02em;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 1.5rem;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-    }
-
-    .nav-links a:hover {
-      color: var(--accent-cyan);
-    }
-
-    /* Hero Section */
-    .hero {
-      position: relative;
-      padding: 7rem 0;
-      border-bottom: 1px solid var(--panel-border);
-      overflow: hidden;
-    }
-
-    /* Background Log Stream Overlay */
-    .hero-log-stream {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--accent-cyan);
-      opacity: 0.03;
-      pointer-events: none;
-      user-select: none;
-      white-space: nowrap;
-      padding: 1rem;
-      line-height: 1.8;
-      box-sizing: border-box;
-    }
-
-    .hero-log-scroller {
-      animation: scrollLogs 35s linear infinite;
-    }
-
-    @keyframes scrollLogs {
-      0% {
-        transform: translateY(0);
-      }
-      100% {
-        transform: translateY(-50%);
-      }
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 700px;
-    }
-
-    .hero-tag {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      margin-bottom: 1.25rem;
-      display: inline-block;
-      border: 1px solid var(--panel-border);
-      padding: 0.25rem 0.75rem;
-      background: rgba(15, 15, 17, 0.6);
-    }
-
-    .hero h1 {
-      font-size: 3rem;
-      font-weight: 700;
-      line-height: 1.15;
-      letter-spacing: -0.03em;
-      margin-bottom: 1.5rem;
-    }
-
-    .hero-subtext {
-      font-size: 1.15rem;
-      color: var(--text-secondary);
-      margin-bottom: 2.5rem;
-      max-width: 620px;
-    }
-
-    .hero-ctas {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .btn {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      font-weight: 500;
-      padding: 0.75rem 1.5rem;
-      border: 1px solid var(--panel-border);
-      background: transparent;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-    }
-
-    .btn-primary {
-      border-color: var(--accent-cyan);
-      color: var(--accent-cyan);
-    }
-
-    .btn-primary:hover {
-      background: rgba(0, 255, 240, 0.05);
-    }
-
-    .btn-secondary {
-      color: var(--text-primary);
-    }
-
-    .btn-secondary:hover {
-      border-color: var(--text-primary);
-    }
-
-    /* Live Stats Bar */
-    .stats-bar {
-      border-bottom: 1px solid var(--panel-border);
-      background-color: var(--panel-bg);
-      padding: 1rem 0;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-    }
-
-    .stats-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-
-    .sensor-status {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: 500;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background-color: var(--accent-green);
-      border-radius: 50%;
-      display: inline-block;
-      box-shadow: 0 0 8px var(--accent-green);
-      animation: pulseDot 2s infinite;
-    }
-
-    @keyframes pulseDot {
-      0% {
-        opacity: 0.4;
-      }
-      50% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0.4;
-      }
-    }
-
-    .stats-grid {
-      display: flex;
-      gap: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .stat-item {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .stat-label {
-      color: var(--text-secondary);
-    }
-
-    .stat-val {
-      color: var(--text-primary);
-      font-weight: 500;
-    }
-
-    /* Featured Project - MIRAGE */
-    .mirage-section {
-      padding: 6rem 0;
-      border-bottom: 1px solid var(--panel-border);
-    }
-
-    .section-label {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-bottom: 1.5rem;
-      display: block;
-    }
-
-    .section-title {
-      font-size: 2.25rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 3rem;
-    }
-
-    .mirage-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 3.5rem;
-      align-items: start;
-    }
-
-    .mirage-visual {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      padding: 1.5rem;
-      position: relative;
-    }
-
-    .mirage-visual-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--panel-border);
-      padding-bottom: 0.75rem;
-      margin-bottom: 1.25rem;
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-    }
-
-    .window-dots {
-      display: flex;
-      gap: 0.35rem;
-    }
-
-    .window-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--text-muted);
-    }
-
-    .mirage-ascii {
-      overflow-x: auto;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      line-height: 1.4;
-      color: var(--accent-cyan);
-      white-space: pre;
-    }
-
-    .findings-container {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    .finding-card {
-      border-left: 2px solid var(--panel-border);
-      padding-left: 1.25rem;
-      transition: border-color 0.2s ease;
-    }
-
-    .finding-card:hover {
-      border-color: var(--accent-cyan);
-    }
-
-    .finding-title {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 0.5rem;
-    }
-
-    .finding-text {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-
-    .mirage-actions {
-      display: flex;
-      gap: 1rem;
-      margin-top: 2.5rem;
-      flex-wrap: wrap;
-    }
-
-    .stack-badges {
-      margin-top: 2rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .badge {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      padding: 0.25rem 0.6rem;
-      background: rgba(31, 31, 35, 0.4);
-      border: 1px solid var(--panel-border);
-      color: var(--text-secondary);
-    }
-
-    /* Expandable Interactive Logs & Paper Summary Panels */
-    .mirage-expandable-panel {
-      grid-column: 1 / -1;
-      border: 1px solid var(--panel-border);
-      background-color: var(--panel-bg);
-      margin-top: 2rem;
-      display: none;
-      overflow: hidden;
-      animation: slideDown 0.3s ease-out forwards;
-    }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 1.25rem;
-      border-bottom: 1px solid var(--panel-border);
-      background-color: rgba(8, 8, 9, 0.4);
-    }
-
-    .panel-title {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-
-    .panel-close {
-      background: none;
-      border: none;
-      color: var(--text-secondary);
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
-
-    .panel-close:hover {
-      color: var(--text-primary);
-    }
-
-    .panel-content {
-      padding: 1.5rem;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    /* Logs View */
-    .log-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      text-align: left;
-    }
-
-    .log-table th {
-      border-bottom: 1px solid var(--panel-border);
-      padding: 0.5rem 0.75rem;
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    .log-table td {
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid rgba(31, 31, 35, 0.5);
-    }
-
-    .log-row-new {
-      animation: highlightNewRow 1.5s ease-out;
-    }
-
-    @keyframes highlightNewRow {
-      0% {
-        background-color: rgba(0, 255, 65, 0.15);
-      }
-      100% {
-        background-color: transparent;
-      }
-    }
-
-    /* Academic Abstract View */
-    .paper-abstract {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-
-    .paper-meta {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-      margin-bottom: 1.5rem;
-      border-bottom: 1px dashed var(--panel-border);
-      padding-bottom: 1rem;
-    }
-
-    .paper-section-title {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--accent-cyan);
-      margin-bottom: 0.5rem;
-      margin-top: 1.5rem;
-    }
-
-    .paper-section-title:first-of-type {
-      margin-top: 0;
-    }
-
-    .paper-text {
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-      margin-bottom: 1rem;
-      text-align: justify;
-    }
-
-    /* Experience Timeline */
-    .experience-section {
-      padding: 6rem 0;
-      border-bottom: 1px solid var(--panel-border);
-    }
-
-    .timeline {
-      position: relative;
-      max-width: 800px;
-      margin-top: 2rem;
-    }
-
-    .timeline::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0.5rem;
-      bottom: 0.5rem;
-      width: 1px;
-      background-color: var(--panel-border);
-    }
-
-    .timeline-item {
-      position: relative;
-      padding-left: 2rem;
-      margin-bottom: 3.5rem;
-    }
-
-    .timeline-item:last-child {
-      margin-bottom: 0;
-    }
-
-    .timeline-marker {
-      position: absolute;
-      left: -3px;
-      top: 0.55rem;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background-color: var(--panel-border);
-      border: 1px solid var(--bg-color);
-      transition: background-color 0.2s ease, transform 0.2s ease;
-    }
-
-    .timeline-item:hover .timeline-marker {
-      background-color: var(--accent-cyan);
-      transform: scale(1.3);
-    }
-
-    .timeline-meta {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      margin-bottom: 0.5rem;
-    }
-
-    .timeline-title {
-      font-size: 1.15rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 0.5rem;
-    }
-
-    .timeline-desc {
-      font-size: 0.925rem;
-      color: var(--text-secondary);
-      max-width: 650px;
-    }
-
-    /* Skills Grid */
-    .skills-section {
-      padding: 6rem 0;
-      border-bottom: 1px solid var(--panel-border);
-    }
-
-    .skills-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
-    }
-
-    .skills-col {
-      background: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      padding: 2rem;
-    }
-
-    .skills-col-title {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid var(--panel-border);
-      padding-bottom: 0.75rem;
-    }
-
-    .skills-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    /* Writing Section */
-    .writing-section {
-      padding: 6rem 0;
-      border-bottom: 1px solid var(--panel-border);
-    }
-
-    .writing-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
-      max-width: 100%;
-    }
-
-    .blog-preview-card {
-      background-color: var(--panel-bg);
-      border: 1px solid var(--panel-border);
-      padding: 2.5rem;
-      transition: border-color 0.2s ease;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      text-decoration: none;
-      color: inherit;
-    }
-
-    .blog-preview-card:hover:not(.disabled-card) {
-      border-color: var(--accent-cyan);
-    }
-
-    .blog-preview-card.disabled-card {
-      cursor: not-allowed;
-      opacity: 0.6;
-    }
-
-    .blog-meta {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--accent-cyan);
-      margin-bottom: 1rem;
-      display: block;
-    }
-
-    .blog-title {
-      font-size: 1.35rem;
-      font-weight: 600;
-      line-height: 1.3;
-      margin-bottom: 1rem;
-      color: var(--text-primary);
-    }
-
-    .blog-summary {
-      font-size: 0.95rem;
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-    }
-
-    /* Contact Section */
-    .contact-section {
-      padding: 7rem 0 9rem 0;
-    }
-
-    .contact-content {
-      max-width: 600px;
-    }
-
-    .contact-links {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-top: 2rem;
-      font-family: var(--font-mono);
-      font-size: 0.95rem;
-    }
-
-    .contact-link-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .contact-label {
-      color: var(--text-secondary);
-      width: 90px;
-    }
-
-    .contact-value:hover {
-      color: var(--accent-cyan);
-    }
-
-    /* Footer */
-    footer {
-      border-top: 1px solid var(--panel-border);
-      padding: 2rem 0;
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      color: var(--text-muted);
-    }
-
-    .footer-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 968px) {
-      .mirage-grid {
-        grid-template-columns: 1fr;
-        gap: 2.5rem;
-      }
-
-      .skills-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-      }
-
-      .writing-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .hero h1 {
-        font-size: 2.25rem;
-      }
-
-      .hero-subtext {
-        font-size: 1rem;
-      }
-
-      .nav-links {
-        display: none; /* Keep it ultra clean, simple top brand for mobile */
-      }
-
-      .stats-container {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .stats-grid {
-        width: 100%;
-        justify-content: space-between;
-      }
-
-      .writing-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-      }
-    }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>if(localStorage.getItem('theme')==='dark')document.documentElement.setAttribute('data-theme','dark');</script>
 </head>
 <body>
-
-  <!-- Background Scrolling logs for Hero (rendered cleanly with CSS) -->
-  <div class="hero-log-stream" aria-hidden="true">
-    <div class="hero-log-scroller" id="scrolling-logs-container">
-      <!-- Content populated by Javascript to prevent huge HTML output -->
+<!-- NAV -->
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="#" class="logo">vt<span style="color:#d4541a;">.</span></a>
+    <div class="nav-links">
+      <a href="#work" class="nav-link">Work</a>
+      <a href="#about" class="nav-link">About</a>
+      <a href="blog.html" class="nav-link">Blog</a>
+      <a href="https://github.com/vinayaktyagi10" target="_blank" rel="noopener" class="nav-link">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+        <span class="nav-text">GitHub</span>
+      </a>
+      <a href="resume.pdf" target="_blank" rel="noopener" class="nav-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span class="nav-text">Resume</span>
+      </a>
+      <button id="theme-toggle" class="nav-link" style="background: none; border: none; cursor: pointer; padding: 8px; display: inline-flex; align-items: center; justify-content: center;" aria-label="Toggle dark mode">
+        <svg class="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        <svg class="theme-icon-sun" style="display: none;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      </button>
+      <a href="#contact" class="btn btn-primary" style="margin-left: 6px;">Say hi</a>
     </div>
   </div>
+</nav>
 
-  <!-- Header -->
-  <header>
-    <div class="container nav-container">
-      <div class="logo">
-        VT<span class="accent-cyan-text">:_</span>
-      </div>
-      <nav class="nav-links">
-        <a href="#mirage">01 // MIRAGE</a>
-        <a href="#experience">02 // EXPERIENCE</a>
-        <a href="#skills">03 // SKILLS</a>
-        <a href="#writing">04 // WRITING</a>
-        <a href="#contact">05 // CONTACT</a>
-      </nav>
+<!-- HERO -->
+<section class="hero section-container">
+  <div class="hero-blob"></div>
+  <div class="hero-gradient"></div>
+
+  <div class="badge">
+    Available · Jaipur, India
+  </div>
+
+  <h1 class="hero-title">
+    I trap<br>hackers<br><span style="font-weight:300;font-style:italic;color:#d4541a;">for a living.</span>
+  </h1>
+
+  <p class="hero-desc">
+    Systems &amp; security engineer. I built a honeypot that's caught 44,000+ real attackers, patched a CVSS 10.0 RCE within 24 hours of disclosure, and manage production infra for 2,160 students.
+  </p>
+
+  <div class="hero-btns">
+    <a href="#work" class="btn btn-primary hero-btn-main">View my work</a>
+    <a href="https://github.com/vinayaktyagi10" target="_blank" rel="noopener" class="btn btn-secondary hero-btn-github">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+      GitHub
+    </a>
+  </div>
+
+  <!-- stat strip -->
+  <div data-fade="" class="stat-grid">
+    <div class="stat-item">
+      <div class="stat-num" id="hero-stat-sessions">44k+</div>
+      <div class="stat-label">attacker sessions captured</div>
     </div>
-  </header>
+    <div class="stat-item stat-item-highlight">
+      <div class="stat-num">82%</div>
+      <div class="stat-label">Docker image reduction</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">45</div>
+      <div class="stat-label">repos in production</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">24h</div>
+      <div class="stat-label">CVSS 10.0 patch turnaround</div>
+    </div>
+  </div>
+</section>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container hero-content">
-      <div class="hero-tag">Systems Security & Threat Intel</div>
-      <h1>Vinayak Tyagi</h1>
-      <p class="hero-subtext">
-        "I build systems that catch attackers."<br><br>
-        CS student at Manipal University Jaipur. Running a live SSH honeypot capturing real attacker sessions around the clock.
-      </p>
-      <div class="hero-ctas">
-        <a href="#mirage" class="btn btn-primary">View MIRAGE</a>
-        <a href="https://github.com/vinayaktyagi10" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub →</a>
+<!-- FEATURED PROJECT: MIRAGE -->
+<section id="work" class="section-container">
+  <div data-fade="" style="display:flex;align-items:baseline;gap:14px;margin-bottom:36px;">
+    <h2 class="section-title">Selected work</h2>
+  </div>
+
+  <!-- MIRAGE dark card -->
+  <div data-fade="" class="card-dark">
+    <div class="card-dark-blob-1"></div>
+    <div class="card-dark-blob-2"></div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:28px;">
+      <span style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#d4541a;background:#d4541a18;border:1px solid #d4541a35;padding:5px 13px;">Featured project</span>
+      <span class="status-live">
+        <span class="status-dot"></span>Live in production
+      </span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr auto;gap:32px;align-items:start;margin-bottom:36px;">
+      <div>
+        <h3 class="card-dark-title">MIRAGE</h3>
+        <p class="card-dark-desc">Production SSH honeypot &amp; threat intelligence platform — engineered from scratch in Go. It listens on the open internet, pretends to be a real server, and captures everything attackers do. Over 44,000 of them fell for it. Still counting.</p>
       </div>
     </div>
-  </section>
 
-  <!-- Live Stats Bar (SOC widget feel) -->
-  <div class="stats-bar">
-    <div class="container stats-container">
-      <div class="sensor-status">
-        <span class="status-dot"></span>
-        <span>LIVE SENSOR — Frankfurt</span>
+    <!-- metrics row -->
+    <div class="card-metrics">
+      <div class="metric-item">
+        <div class="metric-num" id="mirage-metric-sessions">44,204+</div>
+        <div class="metric-label">sessions captured</div>
       </div>
-      <div class="stats-grid">
-        <div class="stat-item">
-          <span class="stat-label">TOTAL SESSIONS:</span>
-          <span class="stat-val" id="stat-total">44,118+</span>
+      <div class="metric-item">
+        <div class="metric-num metric-num-highlight">13</div>
+        <div class="metric-label">coordinated botnet IPs identified</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-num">5</div>
+        <div class="metric-label">normalized PostgreSQL tables</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-num metric-num-live">0</div>
+        <div class="metric-label">API keys exposed client-side</div>
+      </div>
+    </div>
+
+    <!-- highlights grid -->
+    <div class="card-highlights">
+      <div class="highlight-item item-orange">
+        <div class="highlight-title">Custom SSH emulator in Go</div>
+        <div class="highlight-desc">Full handshake via golang.org/x/crypto, PasswordCallback capture, PTY handling, fake interactive shell with stateful directory traversal. Very convincing to bots.</div>
+      </div>
+      <div class="highlight-item item-green">
+        <div class="highlight-title">Botnet fingerprinting via SQL CTEs</div>
+        <div class="highlight-desc">Discovered coordinated IPs hitting exactly 1,522 sessions each. Caught Solana validator credential targeting across automated scanners.</div>
+      </div>
+      <div class="highlight-item item-green">
+        <div class="highlight-title">Zero infrastructure exposure</div>
+        <div class="highlight-desc">REST API (Chi router + API key middleware) tunneled through Cloudflare. No public endpoint. CI/CD publishes live stats daily via GitHub Actions.</div>
+      </div>
+      <div class="highlight-item item-orange">
+        <div class="highlight-title">ML classification layer</div>
+        <div class="highlight-desc">Co-authored PyTorch behavioral embeddings for session clustering. Turns out attackers have very predictable personalities.</div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <div class="tags">
+        <span class="tag">Go</span>
+        <span class="tag">PostgreSQL</span>
+        <span class="tag">Docker</span>
+        <span class="tag">Cloudflare</span>
+        <span class="tag">GitHub Actions</span>
+        <span class="tag">PyTorch</span>
+      </div>
+      <div class="card-links">
+        <a href="https://github.com/Mirage-Source/mirage-core" target="_blank" rel="noopener" class="link-view-project">
+          View project
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"></path></svg>
+        </a>
+        <a href="#" class="link-dashboard">
+          Live dashboard
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"></path></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section class="section-container" style="padding-top: 20px; padding-bottom: 60px;">
+  <div data-fade="" class="card-light">
+    <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start;margin-bottom:32px;">
+      <div>
+        <div class="card-light-badge">Experience</div>
+        <div class="card-light-title">DevOps Intern</div>
+        <div class="card-light-subtitle">Software Development Centre, MUJ — Jaipur, India</div>
+      </div>
+      <div class="date-badge">Aug 2025 – Present</div>
+    </div>
+
+    <div class="exp-grid">
+      <div class="exp-item">
+        <span class="exp-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
+        <div>
+          <div class="exp-item-title">CVE-2025-55182 — patched in 24h</div>
+          <div class="exp-item-desc">CVSS 10.0 unauthenticated RCE across 8 production services. Simultaneously hardened all Dockerfiles to non-root execution.</div>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">UNIQUE IPS:</span>
-          <span class="stat-val" id="stat-ips">97</span>
+      </div>
+      <div class="exp-item">
+        <span class="exp-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
+        <div>
+          <div class="exp-item-title">2 GB → 358 MB Docker images</div>
+          <div class="exp-item-desc">Restructured Dockerfiles across 45 repos with incremental GitHub Actions workflows. Up to 82% image size reduction.</div>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">TOP TARGET:</span>
-          <span class="stat-val" id="stat-target">root</span>
+      </div>
+      <div class="exp-item">
+        <span class="exp-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
+        <div>
+          <div class="exp-item-title">Zero Trust mesh across bare-metal + VPS</div>
+          <div class="exp-item-desc">Deployed Tailscale across Hostinger and bare-metal nodes. Eliminated all public SSH exposure. cgroups for kernel-level resource governance.</div>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">SESSIONS TODAY:</span>
-          <span class="stat-val" id="stat-today">~1,800</span>
+      </div>
+      <div class="exp-item">
+        <span class="exp-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
+        <div>
+          <div class="exp-item-title">Production infra for 2,160 students</div>
+          <div class="exp-item-desc">NPTEL verification, Elective Management, IT ticketing. MinIO S3 migration with 1-hour RPO across 7 databases. Sub-5-min RTO.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="exp-tags">
+      <span class="exp-tag">Docker</span>
+      <span class="exp-tag">GitHub Actions</span>
+      <span class="exp-tag">Tailscale</span>
+      <span class="exp-tag">Linux</span>
+      <span class="exp-tag">MinIO</span>
+      <span class="exp-tag">cgroups</span>
+    </div>
+  </div>
+</section>
+
+<!-- OPEN SOURCE -->
+<section class="section-container" style="padding-top: 0; padding-bottom: 60px;">
+  <div data-fade="" class="card-light">
+    <div class="card-light-header" style="display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: flex-start; margin-bottom: 28px;">
+      <div>
+        <div class="card-light-header-badge" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+          <span style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#a09088;">Open Source</span>
+          <span class="status-merged" style="font-family: 'Outfit', sans-serif; font-size: 11px; color: #2d5a3d; background: #edf5f0; border: 1px solid #c3dece; padding: 3px 10px; display: flex; align-items: center; gap: 6px;"><span style="width:5px;height:5px;border-radius:50%;background:#2d5a3d;"></span>PR merged to main</span>
+        </div>
+        <div class="card-light-title">Honeynet Project — EventHorizon</div>
+        <div class="card-light-subtitle">github.com/honeynet/eventhorizon</div>
+      </div>
+      <a href="https://github.com/honeynet/eventhorizon" class="date-badge" style="text-decoration: none; display: flex; align-items: center; gap: 7px;">
+        View on GitHub
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"></path></svg>
+      </a>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:28px;">
+      <div class="exp-item">
+        <span class="exp-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
+        <div>
+          <div class="exp-item-title">Real-time attacker input capture in C</div>
+          <div class="exp-item-desc">Non-blocking <code style="font-size:12px;background:#f0ebe3;padding:1px 5px;color:#d4541a;">read()</code> after each IAC write to the Telnet tarpit. Sanitized non-printable bytes and emitted per-keystroke metrics via <code style="font-size:12px;background:#f0ebe3;padding:1px 5px;color:#d4541a;">sendMetric()</code>.</div>
+        </div>
+      </div>
+      <div class="exp-item">
+        <span class="exp-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </span>
+        <div>
+          <div class="exp-item-title">Prometheus exporter extension in Go</div>
+          <div class="exp-item-desc">Added <code style="font-size:12px;background:#f0ebe3;padding:1px 5px;color:#d4541a;">telnet_pit_input</code> CounterVec enabling per-session behavioral metrics. PR reviewed and merged to main by Honeynet maintainers.</div>
+        </div>
+      </div>
+    </div>
+    <div class="exp-tags">
+      <span class="exp-tag">C</span>
+      <span class="exp-tag">Go</span>
+      <span class="exp-tag">Prometheus</span>
+      <span class="exp-tag">Telnet Protocol</span>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about" class="about">
+  <div style="max-width:1160px;margin:0 auto;padding:0 28px;">
+    <div data-fade="" class="about-grid">
+      <div>
+        <h2 class="about-title">A bit<br>about me.</h2>
+        <div class="about-desc">
+          <p >I'm Vinayak — a systems and security engineer with a habit of deploying things that probably shouldn't exist on the open internet, then writing detailed reports about what happens when they do.</p>
+          <p >Currently a DevOps Intern at SDC, MUJ, where I manage production infrastructure for 2,160+ students and occasionally patch critical vulnerabilities before anyone notices.</p>
+          <p >When I'm not staring at logs or reading CVE disclosures, I'm watching football (the version played with feet, just to be clear), losing at video games, and building things for fun. MIRAGE started as a weekend experiment. Then 44,000 attackers showed up.</p>
+        </div>
+      </div>
+      <div class="contact-links">
+        <div class="about-facts">
+          <div class="toolkit-title">Quick facts</div>
+          <div style="display:flex;flex-direction:column;gap:0;">
+            <div class="about-fact-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d4541a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px;"><circle cx="12" cy="10" r="3"></circle><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path></svg>
+              <div>
+                <div class="fact-title">Jaipur, India</div>
+                <div class="fact-desc">Open to remote &amp; relocation</div>
+              </div>
+            </div>
+            <div class="about-fact-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d4541a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px;"><rect x="2" y="3" width="20" height="14" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
+              <div>
+                <div class="fact-title">Security &amp; Infrastructure</div>
+                <div class="fact-desc">Primary interest areas</div>
+              </div>
+            </div>
+            <div class="about-fact-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d4541a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+              <div>
+                <div class="fact-title">B.Tech CSE, MUJ</div>
+                <div class="fact-desc">Expected 2028 · Currently interning</div>
+              </div>
+            </div>
+            <div class="about-fact-item" style="border-bottom: none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d4541a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px;"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+              <div>
+                <div class="fact-title">Open source contributor</div>
+                <div class="fact-desc">PR merged · Honeynet Project</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="about-facts">
+          <div class="toolkit-title">Technical toolkit</div>
+          <div class="toolkit-container" style="display:flex;flex-direction:column;gap:14px;">
+            <div>
+              <div class="toolkit-category-title">Languages</div>
+              <div class="toolkit-tags">
+                <span class="toolkit-tag">Go</span>
+                <span class="toolkit-tag">C</span>
+                <span class="toolkit-tag">Python</span>
+              </div>
+            </div>
+            <div>
+              <div class="toolkit-category-title">Infrastructure</div>
+              <div class="toolkit-tags">
+                <span class="toolkit-tag">Docker</span>
+                <span class="toolkit-tag">Tailscale</span>
+                <span class="toolkit-tag">Cloudflare</span>
+                <span class="toolkit-tag">GitHub Actions</span>
+                <span class="toolkit-tag">Linux</span>
+              </div>
+            </div>
+            <div>
+              <div class="toolkit-category-title">Data</div>
+              <div class="toolkit-tags">
+                <span class="toolkit-tag">PostgreSQL</span>
+                <span class="toolkit-tag">MinIO</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
+</section>
 
-  <!-- Featured Project - MIRAGE -->
-  <section class="mirage-section" id="mirage">
-    <div class="container">
-      <span class="section-label">01 // FEATURED PROJECT</span>
-      <h2 class="section-title">MIRAGE: Autonomous SSH Honeypot</h2>
 
-      <div class="mirage-grid">
-        <!-- Left: ASCII Architecture Diagram -->
-        <div class="mirage-visual">
-          <div class="mirage-visual-header">
-            <div class="window-dots">
-              <span class="window-dot"></span>
-              <span class="window-dot"></span>
-              <span class="window-dot"></span>
-            </div>
-            <span>architecture_flow.ascii</span>
-          </div>
-          <pre class="mirage-ascii">
-INTERNET
-    │
-TCP :22 ── SSH Handshake ── Fake Shell (Go)
-                                 │
-                           PostgreSQL 16
-                                 │
-                 ┌───────────────┴───────────────┐
-            REST API                        ML Worker
-         (Chi Router)                   (PyTorch Bridge)
-                 │                            │
-         Cloudflare Tunnel            session_embeddings
-                 │
-         api.vtyagi.dev</pre>
-        </div>
 
-        <!-- Right: 4 Findings -->
-        <div class="findings-container">
-          <div class="finding-card">
-            <h3 class="finding-title">Coordinated Botnet Activity</h3>
-            <p class="finding-text">
-              Identified 13 discrete source IPs distributed across 3 distinct Dutch ASNs, executing mathematically structured session attempts with highly uniform traffic distributions (exactly 1,522 and 761 counts).
-            </p>
-          </div>
-
-          <div class="finding-card">
-            <h3 class="finding-title">Validator Targeting</h3>
-            <p class="finding-text">
-              Observed targeted credential stuffing campaigns focusing specifically on blockchain validator architectures, with <code class="mono accent-cyan-text">sol</code>, <code class="mono accent-cyan-text">solana</code>, <code class="mono accent-cyan-text">validator</code>, and <code class="mono accent-cyan-text">eth-docker</code> showing up as high-frequency usernames.
-            </p>
-          </div>
-
-          <div class="finding-card">
-            <h3 class="finding-title">Client Fingerprinting</h3>
-            <p class="finding-text">
-              99.97% of connections advertised the client banner <code class="mono accent-cyan-text">SSH-2.0-Go</code>, suggesting a singular highly distributed command-and-control framework is managing the automated scans.
-            </p>
-          </div>
-
-          <div class="finding-card">
-            <h3 class="finding-title">Credential Stuffing Profile</h3>
-            <p class="finding-text">
-              Zero interactive SSH sessions recorded across 44,101 successful handshakes, confirming that the ingress scanner profile is currently limited to high-speed credential validation with zero human exploration.
-            </p>
-          </div>
-        </div>
+<!-- EDUCATION -->
+<section class="section-container">
+  <div data-fade="" class="card-light" style="padding: 32px 40px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;">
+    <div class="edu-info" style="display:flex;gap:20px;align-items:center;">
+      <div class="edu-icon" style="width:36px;height:36px;border:1px solid #ddd6cc;background:#faf8f4;display:flex;align-items:center;justify-content:center;flex:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4541a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
       </div>
-
-      <!-- Action links and stack badges -->
-      <div class="mirage-actions">
-        <button class="btn btn-primary" id="btn-live-intel">Live Threat Intel →</button>
-        <button class="btn btn-primary" id="btn-read-paper">Read the Paper →</button>
-        <a href="https://github.com/Mirage-Source/mirage-core" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">GitHub Project →</a>
-      </div>
-
-      <div class="stack-badges">
-        <span class="badge">Go</span>
-        <span class="badge">PostgreSQL 16</span>
-        <span class="badge">PyTorch</span>
-        <span class="badge">Docker</span>
-        <span class="badge">Cloudflare Tunnel</span>
-        <span class="badge">STIX 2.1</span>
-      </div>
-
-      <!-- Expandable Live Intel Panel -->
-      <div class="mirage-expandable-panel" id="panel-live-intel">
-        <div class="panel-header">
-          <span class="panel-title">LIVE FEED — HONEYPOT INGRESS SESSIONS</span>
-          <button class="panel-close" onclick="closePanel('panel-live-intel')">[CLOSE]</button>
-        </div>
-        <div class="panel-content">
-          <table class="log-table">
-            <thead>
-              <tr>
-                <th>TIMESTAMP</th>
-                <th>SRC IP</th>
-                <th>ASN / COUNTRY</th>
-                <th>TARGET USERNAME</th>
-                <th>PASSWORD TRIED</th>
-                <th>CLIENT BANNER</th>
-              </tr>
-            </thead>
-            <tbody id="live-log-rows">
-              <!-- Dynamically populated rows representing authentic-looking connections -->
-            </tbody>
-          </table>
-          <div style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); margin-top: 1rem; text-align: right;">
-            Session patterns derived from real capture data. IPs anonymised.
-          </div>
-        </div>
-      </div>
-
-      <!-- Expandable Paper Abstract Panel -->
-      <div class="mirage-expandable-panel" id="panel-read-paper">
-        <div class="panel-header">
-          <span class="panel-title">RESEARCH PREPRINT — MIRAGE THREAT EMBEDDINGS</span>
-          <button class="panel-close" onclick="closePanel('panel-read-paper')">[CLOSE]</button>
-        </div>
-        <div class="panel-content">
-          <div class="paper-abstract">
-            <div class="paper-meta">
-              <strong>Title:</strong> Unsupervised Botnet Profiling in Go-Based Interactive SSH Honeypots<br>
-              <strong>Authors:</strong> Vinayak Tyagi (Manipal University Jaipur)<br>
-              <strong>Date:</strong> June 2026 | <strong>Subject:</strong> Cryptographic Node Intrusion Detection
-            </div>
-
-            <div class="paper-section-title">ABSTRACT</div>
-            <p class="paper-text">
-              Interactive Secure Shell (SSH) honeypots provide high-fidelity indicators of compromise but suffer from analysis bottlenecks when processing large-scale intrusion attempts. We present MIRAGE, a lightweight SSH honeypot engine written in Go designed to absorb massive automated credential attacks while generating structured behavioral logs. By mapping chronological password entries and timing patterns into high-dimensional vector spaces using a PyTorch bridge, we cluster scans without requiring manual signature compilation.
-            </p>
-
-            <div class="paper-section-title">KEY DESIGN HIGHLIGHTS</div>
-            <p class="paper-text">
-              1. <strong>Go Engine Implementation:</strong> By utilizing the native <code class="mono">golang.org/x/crypto/ssh</code> stack, MIRAGE handles high concurrency loads with minimal memory footprints, serving fake pseudo-terminal shells to attackers without exposing Host OS kernels.<br>
-              2. <strong>Distributed Sensors:</strong> Single sensor deployed on a Frankfurt VPS transmits structured STIX 2.1 JSON payloads to PostgreSQL via Cloudflare tunnel, preserving absolute threat isolation.
-            </p>
-
-            <div class="paper-section-title">EXPERIMENTAL FINDINGS</div>
-            <p class="paper-text">
-              Evaluating 44,101 raw connection profiles over a 11-day capture cycle, we isolate a dominant botnet infrastructure running Go scanner code and attempting known blockchain validator root configurations. The mathematical symmetry of attempts suggests centralized orchestration across geographically distributed hosting platforms.
-            </p>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Experience Section -->
-  <section class="experience-section" id="experience">
-    <div class="container">
-      <span class="section-label">02 // EXPERIENCE</span>
-      <h2 class="section-title">Timeline</h2>
-
-      <div class="timeline">
-        <div class="timeline-item">
-          <span class="timeline-marker"></span>
-          <div class="timeline-meta">2026 — PRESENT</div>
-          <h3 class="timeline-title">Independent Security Research — MIRAGE</h3>
-          <p class="timeline-desc">
-            Designed and deployed the MIRAGE honey-sensor on a Frankfurt region. Processing threat intel from 44,101 credentials sessions targeting cloud providers and blockchain infrastructure.
-          </p>
-        </div>
-
-        <div class="timeline-item">
-          <span class="timeline-marker"></span>
-          <div class="timeline-meta">2025 — PRESENT</div>
-          <h3 class="timeline-title">DevOps Intern — SDC MUJ</h3>
-          <p class="timeline-desc">
-            Managing and scaling production server infrastructure for the Student Development Cell (SDC) at Manipal University Jaipur, directly supporting 2,160 active student users. Handling Dockerized environments, CI/CD runtimes, and reverse-proxy route configurations.
-          </p>
-        </div>
+      <div>
+        <div class="edu-badge" style="font-family:'Outfit',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#a09088;margin-bottom:6px;">Education</div>
+        <div class="edu-title" style="font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:#1c1713;letter-spacing:-.01em;">Manipal University Jaipur</div>
+        <div class="edu-subtitle" style="font-family:'Outfit',sans-serif;font-size:14px;color:#6b5f59;margin-top:4px;">B.Tech, Computer Science &amp; Engineering</div>
       </div>
     </div>
-  </section>
+    <div style="font-family:'Outfit',sans-serif;font-size:13px;color:#a09088;background:#f5f0ea;padding:7px 16px;white-space:nowrap;">Expected 2028</div>
+  </div>
+</section>
 
-  <!-- Skills Section -->
-  <section class="skills-section" id="skills">
-    <div class="container">
-      <span class="section-label">03 // SKILLS</span>
-      <h2 class="section-title">Technical Competence</h2>
-
-      <div class="skills-grid">
-        <div class="skills-col">
-          <h3 class="skills-col-title">Languages</h3>
-          <div class="skills-list">
-            <span class="badge">Go</span>
-            <span class="badge">Python</span>
-            <span class="badge">SQL</span>
-            <span class="badge">Bash</span>
-          </div>
-        </div>
-
-        <div class="skills-col">
-          <h3 class="skills-col-title">Infrastructure</h3>
-          <div class="skills-list">
-            <span class="badge">Docker</span>
-            <span class="badge">PostgreSQL</span>
-            <span class="badge">Linux</span>
-            <span class="badge">Cloudflare</span>
-            <span class="badge">GitHub Actions</span>
-          </div>
-        </div>
-
-        <div class="skills-col">
-          <h3 class="skills-col-title">Security & Intel</h3>
-          <div class="skills-list">
-            <span class="badge">SSH Honeypots</span>
-            <span class="badge">STIX 2.1</span>
-            <span class="badge">MITRE ATT&CK</span>
-            <span class="badge">Threat Intelligence</span>
-          </div>
+<!-- CONTACT -->
+<section id="contact" class="contact">
+  <div style="max-width:1160px;margin:0 auto;padding:0 28px;">
+    <div data-fade="" class="contact-grid">
+      <div>
+        <h2 class="contact-title">
+          Let's build<br>something<br><span style="color:#d4541a;font-style:italic;font-weight:300;">worth deploying.</span>
+        </h2>
+        <p class="contact-desc">Whether it's infrastructure, security research, or you just want to talk football — my inbox is open. Response time: much faster than 24 hours. Unless there's a match on.</p>
+        <div class="contact-buttons">
+          <button id="copy-email-btn" class="btn-copy-email">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            Copy email address
+          </button>
+          <a href="mailto:vinayaktyagi.ed@gmail.com" class="link-email">vinayaktyagi.ed@gmail.com</a>
         </div>
       </div>
-    </div>
-  </section>
-
-  <!-- Writing Section -->
-  <section class="writing-section" id="writing">
-    <div class="container">
-      <span class="section-label">04 // WRITING</span>
-      <h2 class="section-title">Threat Intelligence</h2>
-
-      <div class="writing-grid">
-        <!-- Active Blog Card -->
-        <a href="blog/crypto-validator-targeting.html" class="blog-preview-card">
+      <div class="contact-links">
+        <a href="https://github.com/vinayaktyagi10" class="contact-card">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
           <div>
-            <span class="blog-meta">THREAT INTEL · JUNE 2026</span>
-            <h3 class="blog-title">Crypto Infrastructure Under Fire: SSH Credential Campaigns Targeting Blockchain Validators</h3>
-            <p class="blog-summary">
-              Analysis of 44,101 SSH intrusion attempts reveals organised credential campaigns specifically targeting Solana validator and Ethereum node infrastructure...
-            </p>
+            <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;color:inherit;">GitHub</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:12px;color:#6b5f59;margin-top:2px;">github.com/vinayaktyagi10</div>
           </div>
-          <div class="btn btn-secondary" style="margin-top: auto; align-self: flex-start;">Read Report →</div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;"><path d="M7 17L17 7M7 7h10v10"></path></svg>
         </a>
-
-        <!-- Second Active Blog Card -->
-        <a href="blog/hour-14-spike.html" class="blog-preview-card">
+        <a href="https://linkedin.com/in/vinayaktyagi10" class="contact-card">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
           <div>
-            <span class="blog-meta">THREAT INTEL · JUNE 2026</span>
-            <h3 class="blog-title">The 9,484 Session Hour: Anatomy of a Coordinated SSH Scanning Event</h3>
-            <p class="blog-summary">
-              At 14:00 UTC, a single IP fired 7,562 sessions in 27 minutes. What the timing, duration variance, and credential patterns reveal about coordinated botnet infrastructure...
-            </p>
+            <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;color:inherit;">LinkedIn</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:12px;color:#6b5f59;margin-top:2px;">linkedin.com/in/vinayaktyagi10</div>
           </div>
-          <div class="btn btn-secondary" style="margin-top: auto; align-self: flex-start;">
-            Read Report →
-          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;"><path d="M7 17L17 7M7 7h10v10"></path></svg>
         </a>
-
-        <!-- Disabled Blog Card -->
-        <div class="blog-preview-card disabled-card">
+        <a href="mailto:vinayaktyagi.ed@gmail.com" class="contact-card">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
           <div>
-            <span class="blog-meta" style="color: var(--text-muted);">ANALYSIS · COMING SOON</span>
-            <h3 class="blog-title" style="color: var(--text-secondary);">The Botnet That Counts: Mathematical Session Distribution as a C2 Detection Primitive</h3>
-            <p class="blog-summary" style="color: var(--text-muted);">
-              13 IPs across 3 Dutch ASNs. Sessions distributed at exactly 1,522 and 761 — a 2:1 ratio suggesting centralized orchestration. How session-count symmetry exposes botnet coordination.
-            </p>
+            <div style="font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;color:inherit;">Email</div>
+            <div style="font-family:'Outfit',sans-serif;font-size:12px;color:#6b5f59;margin-top:2px;">vinayaktyagi.ed@gmail.com</div>
           </div>
-          <div class="btn btn-secondary" style="margin-top: auto; align-self: flex-start; border-color: var(--panel-border); color: var(--text-muted); cursor: not-allowed;">Coming Soon</div>
-        </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;"><path d="M7 17L17 7M7 7h10v10"></path></svg>
+        </a>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- Contact Section -->
-  <section class="contact-section" id="contact">
-    <div class="container">
-      <span class="section-label">05 // CONTACT</span>
-      <h2 class="section-title">Get In Touch</h2>
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-container">
+    <span class="footer-text">© 2026 Vinayak Tyagi · <a href="blog.html" style="color: inherit; text-decoration: none; border-bottom: 1px dashed #d4541a33; transition: color 0.2s;" onmouseover="this.style.color='#d4541a'" onmouseout="this.style.color='inherit'">Blog</a> · <a href="games.html" style="color: inherit; text-decoration: none; border-bottom: 1px dashed #d4541a33; transition: color 0.2s;" onmouseover="this.style.color='#d4541a'" onmouseout="this.style.color='inherit'">Game Shelf</a></span>
+    <span class="footer-logo">vt<span style="color:#d4541a40;">.</span></span>
+  </div>
+</footer>
 
-      <div class="contact-content">
-        <div class="contact-links">
-          <div class="contact-link-item">
-            <span class="contact-label">Email:</span>
-            <a href="mailto:vinayaktyagi.ed@gmail.com" class="contact-value">vinayaktyagi.ed@gmail.com</a>
-          </div>
-          <div class="contact-link-item">
-            <span class="contact-label">GitHub:</span>
-            <a href="https://github.com/vinayaktyagi10" target="_blank" rel="noopener noreferrer" class="contact-value">github.com/vinayaktyagi10</a>
-          </div>
-          <div class="contact-link-item">
-            <span class="contact-label">LinkedIn:</span>
-            <a href="https://linkedin.com/in/vinayaktyagi10" target="_blank" rel="noopener noreferrer" class="contact-value">linkedin.com/in/vinayaktyagi10</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+<!-- TOAST -->
+<div id="copy-toast" class="toast">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+  Email copied to clipboard
+</div>
 
-  <!-- Footer -->
-  <footer>
-    <div class="container footer-container">
-      <div>VINAYAK TYAGI &copy; 2026</div>
-      <div>SEC_OPS // FRANKFURT_NODE_ACTIVE</div>
-    </div>
-  </footer>
-
-  <script>
-    // Authentic static data pool for hero log stream and interactive table
-    const mockLogsPool = [
-      { ip: "185.156.74.56", country: "NL (ASN-49544)", user: "solana", pass: "solana-val-2026", banner: "SSH-2.0-Go" },
-      { ip: "43.153.220.198", country: "CN (ASN-132203)", user: "root", pass: "123456", banner: "SSH-2.0-Go" },
-      { ip: "195.133.192.12", country: "DE (ASN-200019)", user: "sol", pass: "validatorNode1", banner: "SSH-2.0-Go" },
-      { ip: "218.92.0.126", country: "CN (ASN-4134)", user: "validator", pass: "admin123", banner: "SSH-2.0-Go" },
-      { ip: "80.94.95.234", country: "NL (ASN-43350)", user: "eth-docker", pass: "dockerpass", banner: "SSH-2.0-Go" },
-      { ip: "103.149.162.195", country: "IN (ASN-133961)", user: "root", pass: "admin", banner: "SSH-2.0-Go" },
-      { ip: "180.101.88.227", country: "CN (ASN-4134)", user: "admin", pass: "password", banner: "SSH-2.0-Go" },
-      { ip: "94.232.47.112", country: "NL (ASN-49544)", user: "solana", pass: "solana-node", banner: "SSH-2.0-Go" },
-      { ip: "51.15.82.109", country: "FR (ASN-12876)", user: "root", pass: "root123", banner: "SSH-2.0-Go" },
-      { ip: "185.220.101.5", country: "DE (ASN-200350)", user: "validator", pass: "staking2026", banner: "SSH-2.0-Go" }
-    ];
-
-    // Populate Background scrolling logs (Hero Section)
-    function setupBackgroundLogs() {
-      const container = document.getElementById("scrolling-logs-container");
-      let html = "";
-      // Create a long text block of 40 lines of authentic SSH connection logs
-      for (let i = 0; i < 40; i++) {
-        const item = mockLogsPool[i % mockLogsPool.length];
-        const date = new Date(Date.now() - (i * 90000));
-        const timestamp = date.toISOString().replace('T', ' ').substr(0, 19);
-        html += `<div>${timestamp} frankfurt-sensor sshd[${28000 + i}]: Invalid user ${item.user} from ${item.ip} port ${40000 + i}</div>`;
-      }
-      // Duplicate it once to allow seamless CSS infinite scroll translation
-      container.innerHTML = html + html;
-    }
-
-    // Tab Panel toggles for MIRAGE
-    const liveIntelBtn = document.getElementById("btn-live-intel");
-    const readPaperBtn = document.getElementById("btn-read-paper");
-    const livePanel = document.getElementById("panel-live-intel");
-    const paperPanel = document.getElementById("panel-read-paper");
-
-    function closePanel(panelId) {
-      document.getElementById(panelId).style.display = "none";
-    }
-
-    function togglePanel(activePanel, inactivePanel) {
-      if (activePanel.style.display === "block") {
-        activePanel.style.display = "none";
-      } else {
-        activePanel.style.display = "block";
-        inactivePanel.style.display = "none";
-
-        // Scroll target container into view smoothly
-        activePanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-    }
-
-    liveIntelBtn.addEventListener("click", () => togglePanel(livePanel, paperPanel));
-    readPaperBtn.addEventListener("click", () => togglePanel(paperPanel, livePanel));
-
-    // Populate Live Log Stream Table (MIRAGE Interactive widget)
-    const logTableBody = document.getElementById("live-log-rows");
-
-    function generateLogEntry() {
-      const log = mockLogsPool[Math.floor(Math.random() * mockLogsPool.length)];
-      const now = new Date();
-      const timeStr = now.toISOString().replace('T', ' ').substr(11, 8); // hh:mm:ss
-
-      const newRow = document.createElement("tr");
-      newRow.className = "log-row-new";
-      newRow.innerHTML = `
-        <td class="accent-cyan-text">${timeStr}</td>
-        <td>${log.ip}</td>
-        <td>${log.country}</td>
-        <td><code class="mono">${log.user}</code></td>
-        <td><code class="mono">${log.pass}</code></td>
-        <td class="accent-green-text"><code class="mono">${log.banner}</code></td>
-      `;
-
-      // Insert at top of the table
-      if (logTableBody.firstChild) {
-        logTableBody.insertBefore(newRow, logTableBody.firstChild);
-      } else {
-        logTableBody.appendChild(newRow);
-      }
-
-      // Cap rows at 8 to keep it clean and performant
-      while (logTableBody.children.length > 8) {
-        logTableBody.removeChild(logTableBody.lastChild);
-      }
-    }
-
-    // Live Stats Dynamic Ingress (with fallback)
-    async function fetchLiveStats() {
-      try {
-        const response = await fetch('./stats.json');
-        if (!response.ok) throw new Error('stats.json not found');
-        const data = await response.json();
-
-        const total = data.total_sessions;
-        const ips = data.unique_ips;
-        const today = data.sessions_last_24h;
-        const topUsername = data.top_usernames?.[0]?.username || 'root';
-
-        document.getElementById('stat-total').textContent =
-          total ? total.toLocaleString() + '+' : '44,118+';
-        document.getElementById('stat-ips').textContent =
-          ips ? ips.toLocaleString() : '97';
-        document.getElementById('stat-target').textContent = topUsername;
-        document.getElementById('stat-today').textContent =
-          today ? '~' + today.toLocaleString() : '~1,800';
-      } catch (error) {
-        console.warn('Stats fetch failed, using fallbacks:', error.message);
-      }
-    }
-    // Initialize
-    setupBackgroundLogs();
-    fetchLiveStats();
-
-    // Seed initial rows
-    for (let i = 0; i < 6; i++) {
-      generateLogEntry();
-    }
-
-    // Stream new attempts every 3.5 seconds
-    setInterval(generateLogEntry, 3500);
-  </script>
-
+  <script src="script.js"></script>
 </body>
 </html>
