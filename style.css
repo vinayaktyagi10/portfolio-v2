@@ -20,6 +20,72 @@ body {
   background: #d4541a33;
 }
 
+/* CUSTOM SCROLLBAR */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f0ea; /* Slightly darker than page background to create depth */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4541a77; /* Higher opacity orange (around 47%) */
+  border-radius: 10px;
+  border: 3px solid #f5f0ea; /* Create padding around the thumb */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d4541acc; /* Solid orange on hover */
+}
+
+/* Firefox Support */
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #d4541a77 #f5f0ea;
+}
+
+/* Dark Mode Scrollbar Overrides */
+html[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: #150f0c; /* Slightly lighter than dark body to create depth */
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #d4541a88;
+  border: 3px solid #150f0c;
+}
+
+html[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #d4541ae6;
+}
+
+html[data-theme="dark"] {
+  scrollbar-color: #d4541a88 #150f0c;
+}
+
+/* SMOOTH THEME TOGGLE TRANSITIONS */
+body, 
+.navbar, 
+.logo, 
+.nav-link, 
+.btn, 
+.card-light, 
+.about, 
+.footer, 
+.stat-grid, 
+.stat-item, 
+.metric-item, 
+.toolkit-tag, 
+.edu-icon, 
+.exp-tag, 
+.contact-card, 
+.controls-bar, 
+.search-input, 
+.filter-btn {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+}
+
 /* KEYFRAME ANIMATIONS */
 @keyframes blob {
   0%, 100% { border-radius: 44% 56% 62% 38% / 48% 42% 58% 52%; }
