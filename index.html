@@ -67,7 +67,7 @@
   </h1>
 
   <p class="hero-desc">
-    Systems &amp; security engineer. I built a honeypot that's caught 44,000+ real attackers, patched a CVSS 10.0 RCE within 24 hours of disclosure, and manage production infra for 2,160 students.
+    Systems &amp; security engineer. I built a honeypot that's caught 150,000+ real attackers, patched a CVSS 10.0 RCE within 24 hours of disclosure, and manage production infra for 2,160 students.
   </p>
 
   <div class="hero-btns">
@@ -81,7 +81,7 @@
   <!-- stat strip -->
   <div data-fade="" class="stat-grid">
     <div class="stat-item">
-      <div class="stat-num" id="hero-stat-sessions">44k+</div>
+      <div class="stat-num" id="hero-stat-sessions">150k+</div>
       <div class="stat-label">attacker sessions captured</div>
     </div>
     <div class="stat-item stat-item-highlight">
@@ -120,15 +120,15 @@
     <div style="display:grid;grid-template-columns:1fr auto;gap:32px;align-items:start;margin-bottom:36px;">
       <div>
         <h3 class="card-dark-title">MIRAGE</h3>
-        <p class="card-dark-desc">Production SSH honeypot &amp; threat intelligence platform — engineered from scratch in Go. It listens on the open internet, pretends to be a real server, and captures everything attackers do. Over 44,000 of them fell for it. Still counting.</p>
+        <p class="card-dark-desc">Production SSH honeypot &amp; threat intelligence platform — engineered from scratch in Go. Iteration I ran on infrastructure in Frankfurt and was closed after logging 150,000+ real attacker sessions, published as a cited dataset. Iteration II is live now at <a href="https://mirage.vtyagi.dev" target="_blank" rel="noopener" style="color:#d4541a;">mirage.vtyagi.dev</a>, capturing fresh sessions in real time.</p>
       </div>
     </div>
 
     <!-- metrics row -->
     <div class="card-metrics">
       <div class="metric-item">
-        <div class="metric-num" id="mirage-metric-sessions">44,204+</div>
-        <div class="metric-label">sessions captured</div>
+        <div class="metric-num" id="mirage-metric-sessions">150,000+</div>
+        <div class="metric-label">sessions captured (Iteration I, closed)</div>
       </div>
       <div class="metric-item">
         <div class="metric-num metric-num-highlight">13</div>
@@ -178,10 +178,91 @@
           View project
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"></path></svg>
         </a>
-        <a href="https://mirage-source.github.io/mirage-core/" target="_blank" rel="noopener" class="link-dashboard">
+        <a href="https://mirage.vtyagi.dev" target="_blank" rel="noopener" class="link-dashboard">
           Live dashboard
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"></path></svg>
         </a>
+        <a href="https://doi.org/10.17605/OSF.IO/JM4E7" target="_blank" rel="noopener" class="link-dashboard">
+          Dataset DOI
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"></path></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OTHER PROJECTS -->
+<section class="section-container" style="padding-top: 0; padding-bottom: 60px;">
+  <div class="other-projects-grid">
+    <div data-fade="" class="card-light">
+      <div class="card-light-header" style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <div class="card-light-badge">Hackathon — Finalist</div>
+          <div class="card-light-title">NovaForge</div>
+          <div class="card-light-subtitle">Multi-factor approval &amp; audit platform — Tally CodeBrewers</div>
+        </div>
+      </div>
+      <div class="exp-grid" style="grid-template-columns:1fr;">
+        <div class="exp-item">
+          <span class="exp-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>
+          <div>
+            <div class="exp-item-title">WebAuthn passkey login, no hard expiry</div>
+            <div class="exp-item-desc">TOTP fallback, scrypt-hashed recovery codes gated behind a fresh passkey signature. Trust-decay sessions with immediate per-request revocation.</div>
+          </div>
+        </div>
+        <div class="exp-item">
+          <span class="exp-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>
+          <div>
+            <div class="exp-item-title">M-of-N weighted-quorum approval engine</div>
+            <div class="exp-item-desc">Escalation timeouts, fail-closed fallback, hash-chained tamper-evident audit log with non-repudiable WebAuthn-signed votes.</div>
+          </div>
+        </div>
+      </div>
+      <div class="exp-tags">
+        <span class="exp-tag">Node.js</span>
+        <span class="exp-tag">TypeScript</span>
+        <span class="exp-tag">Prisma</span>
+        <span class="exp-tag">React</span>
+      </div>
+    </div>
+
+    <div data-fade="" class="card-light">
+      <div class="card-light-header" style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <div class="card-light-badge">Platform</div>
+          <div class="card-light-title">MUJ Placement Kite</div>
+          <div class="card-light-subtitle">Placement cell platform</div>
+        </div>
+      </div>
+      <div class="exp-grid" style="grid-template-columns:1fr;">
+        <div class="exp-item">
+          <span class="exp-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>
+          <div>
+            <div class="exp-item-title">Student module end-to-end</div>
+            <div class="exp-item-desc">Profiles, draft-request approval workflow, RBAC, rate limiting, Cloudinary uploads. Idempotent bulk-upload pipeline parsing UG/PG Excel templates.</div>
+          </div>
+        </div>
+        <div class="exp-item">
+          <span class="exp-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </span>
+          <div>
+            <div class="exp-item-title">Audit logging across 12 write paths</div>
+            <div class="exp-item-desc">Placement-cycle hiring-workflow tracking (round pass/fail, roster + Excel export). SMTP worker pool over Redis Streams for async mail.</div>
+          </div>
+        </div>
+      </div>
+      <div class="exp-tags">
+        <span class="exp-tag">Go</span>
+        <span class="exp-tag">PostgreSQL</span>
+        <span class="exp-tag">Redis</span>
+        <span class="exp-tag">Cloudinary</span>
       </div>
     </div>
   </div>
@@ -304,7 +385,7 @@
         <div class="about-desc">
           <p >I'm Vinayak — a systems and security engineer with a habit of deploying things that probably shouldn't exist on the open internet, then writing detailed reports about what happens when they do.</p>
           <p >Currently a DevOps Intern at SDC, MUJ, where I manage production infrastructure for 2,160+ students and occasionally patch critical vulnerabilities before anyone notices.</p>
-          <p >When I'm not staring at logs or reading CVE disclosures, I'm watching football (the version played with feet, just to be clear), losing at video games, and building things for fun. MIRAGE started as a weekend experiment. Then 44,000 attackers showed up.</p>
+          <p >When I'm not staring at logs or reading CVE disclosures, I'm watching football (the version played with feet, just to be clear), losing at video games, and building things for fun. MIRAGE started as a weekend experiment. Then 150,000 attackers showed up.</p>
         </div>
       </div>
       <div class="contact-links">

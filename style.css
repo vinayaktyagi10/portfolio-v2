@@ -627,8 +627,15 @@ body,
   margin-bottom: 32px;
 }
 
+.other-projects-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
 @media(max-width: 768px) {
-  .exp-grid {
+  .exp-grid,
+  .other-projects-grid {
     grid-template-columns: 1fr !important;
   }
 }

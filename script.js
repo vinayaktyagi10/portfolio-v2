@@ -97,30 +97,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 4. FETCH HONEYPOT STATS
-  async function fetchLiveStats() {
-    try {
-      const response = await fetch('./stats.json');
-      if (!response.ok) throw new Error('stats.json not found');
-      const data = await response.json();
-
-      const total = data.total_sessions;
-      if (total) {
-        const heroStat = document.getElementById('hero-stat-sessions');
-        const mirageMetric = document.getElementById('mirage-metric-sessions');
-
-        if (heroStat) {
-          heroStat.textContent = `${Math.floor(total / 1000)}k+`;
-        }
-        if (mirageMetric) {
-          mirageMetric.textContent = `${total.toLocaleString()}+`;
-        }
-      }
-    } catch (error) {
-      console.warn('Stats fetch failed, using fallbacks:', error.message);
-    }
-  }
-
-  fetchLiveStats();
 });
 
