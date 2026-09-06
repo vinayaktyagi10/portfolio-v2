@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -51,6 +51,9 @@ export default function ProjectPanel({ project, origin, onClose, mobile, reduced
   const [box, setBox] = useState(() => geometry(origin));
   // Content only appears once the panel has finished scaling.
   const [settled, setSettled] = useState(reduced || mobile);
+  // The long description is opt-in. The panel's job is to stay dense; a
+  // reader who wants the whole story asks for it.
+  const [expanded, setExpanded] = useState(false);
 
   useLayoutEffect(() => {
     const onResize = () => setBox(geometry(origin));
@@ -167,7 +170,47 @@ export default function ProjectPanel({ project, origin, onClose, mobile, reduced
             {project.panelLine}
           </motion.p>
 
-          <motion.dl className="panel-details" {...reveal(2)}>
+          {project.about && (
+            <motion.div className="panel-about" {...reveal(2)}>
+              <button
+                type="button"
+                className="panel-about-toggle"
+                aria-expanded={expanded}
+                aria-controls={`panel-about-${project.id}`}
+                onClick={() => setExpanded((v) => !v)}
+              >
+                <span className="panel-about-sign" aria-hidden="true">
+                  {expanded ? "\u2212" : "+"}
+                </span>
+                {expanded ? "less" : "read more"}
+              </button>
+
+              {/* Height is animated rather than toggled so the detail rows
+                  below slide instead of jumping. `overflow: hidden` on the
+                  body is what makes height:auto animatable. */}
+              <AnimatePresence initial={false}>
+                {expanded && (
+                  <motion.div
+                    id={`panel-about-${project.id}`}
+                    className="panel-about-body"
+                    initial={reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                    animate={reduced ? { opacity: 1 } : { height: "auto", opacity: 1 }}
+                    exit={reduced ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                    transition={{
+                      duration: reduced ? 0.15 : 0.32,
+                      ease: [0.22, 0.9, 0.3, 1],
+                    }}
+                  >
+                    {project.about.map((para) => (
+                      <p key={para.slice(0, 32)}>{para}</p>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
+
+          <motion.dl className="panel-details" {...reveal(3)}>
             {project.details.map(([label, value]) => (
               <div className="detail" key={label}>
                 <dt>{label}</dt>
@@ -192,7 +235,7 @@ export default function ProjectPanel({ project, origin, onClose, mobile, reduced
           </motion.dl>
 
           {project.trace && (
-            <motion.p className="panel-trace" {...reveal(3)}>
+            <motion.p className="panel-trace" {...reveal(4)}>
               {project.trace}
             </motion.p>
           )}

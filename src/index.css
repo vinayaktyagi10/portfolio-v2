@@ -359,6 +359,49 @@ a:hover { text-decoration-color: var(--accent); }
   color: var(--panel-sub);
 }
 
+/* The long description is opt-in, and its control is written in the panel's
+   own technical register rather than as a new kind of button: same monospace,
+   same label colour as a detail's <dt>, accent only on hover. Collapsed, it
+   costs one line. */
+.panel-line:has(+ .panel-about) { margin-bottom: 1rem; }
+
+.panel-about { margin: 0 0 1.75rem; }
+
+.panel-about-toggle {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--panel-label);
+}
+
+.panel-about-toggle:hover,
+.panel-about-toggle:focus-visible { color: var(--accent); }
+
+/* Fixed width so the label does not shift when + becomes the minus sign. */
+.panel-about-sign {
+  display: inline-block;
+  width: 0.7em;
+  text-align: center;
+}
+
+/* height:auto is only animatable while the overflow is clipped. */
+.panel-about-body { overflow: hidden; }
+
+.panel-about-body p {
+  margin: 1rem 0 0;
+  max-width: 66ch;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: var(--panel-sub);
+}
+
 .panel-details { margin: 0; border-top: 1px solid var(--panel-line); }
 
 .detail {
