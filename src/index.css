@@ -1,0 +1,448 @@
+:root {
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* One hue, two depths. The mesh and the surface share a background: the
+     unravel is the tangle resolving into text, not a change of place. The
+     panel is the same water, further down. */
+  --deep-bg: #101a18;
+  --panel-bg: #070b09;
+
+  /* Surface type. Larger and lighter than the depth register; the calm comes
+     from size, weight and air rather than from low contrast. Ratios against
+     --deep-bg: 14.0 / 8.4 / 6.2 : 1. */
+  --surface-fg: #dfe6e2;
+  --surface-muted: #a7b5b0;
+  --surface-faint: #8b9c97;
+  --surface-line: #26332f;
+  --surface-dot: #4a5b57;
+
+  /* One accent, two strengths. Quiet on the surface, full brightness inside a
+     panel and on hover — clicking in is the signal getting stronger. */
+  --accent-quiet: #5a927e;
+  --accent: #5dcaa5;
+
+  --mesh-line: #223b36;
+  --mesh-dim: #2f6350;
+  --hero-name: #d8e4de;
+  /* Specified as #6e8377, which lands at 4.38:1 on --deep-bg — just under AA
+     at 10px. Four levels lighter, 4.67:1. */
+  --hero-tagline: #72887c;
+
+  /* Depth type. Denser and dimmer than the surface, but every value still
+     clears AA: 15.9 / 7.6 / 8.0 / 5.3 / 5.0 : 1 against --panel-bg. */
+  --panel-fg: #e2e8e5;
+  --panel-sub: #8fa5a0;
+  --panel-value: #93a9a4;
+  --panel-label: #6b8b84;
+  --panel-whisper: #628681;
+  --panel-line: #16302c;
+  --panel-rule: #0f211e;
+  --panel-edge: #1d3b35;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Keep the scrollbar gutter present from the first paint: the mesh's
+     pre-render geometry probe has to measure the same width the stage ends up
+     with, and this also stops the page shifting when content crosses the
+     viewport height. */
+  overflow-y: scroll;
+}
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  background: var(--deep-bg);
+  color: var(--surface-fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
+
+/* ---------------------------------------------------------------- reveal --
+   The runway is 200svh: the stage is pinned across the first 100svh, and
+   `main` is pulled up by exactly that amount so that at scroll progress 1 the
+   surface section's top edge sits at viewport y = 0 — directly beneath the
+   stage it crossfades into. */
+.reveal {
+  position: relative;
+  z-index: 2;
+  height: 200svh;
+  pointer-events: none;
+}
+
+main {
+  position: relative;
+  z-index: 1;
+  margin-top: -100svh;
+}
+
+.app.reduced .reveal { height: 100svh; }
+.app.reduced main { margin-top: 0; }
+
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  background: var(--deep-bg);
+}
+
+.mesh-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mesh-lines line {
+  stroke: var(--mesh-line);
+  stroke-linecap: round;
+}
+
+.node {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+.node-dot {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  background: var(--mesh-dim);
+}
+
+.node-label {
+  position: absolute;
+  top: -0.6em;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  color: var(--accent-quiet);
+  white-space: nowrap;
+}
+
+/* Sits on the same left edge as the surface content below it. */
+.hero-intro {
+  position: absolute;
+  top: 3rem;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  max-width: 62rem;
+  padding: 0 2rem;
+}
+
+.hero-name {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--hero-name);
+}
+
+.hero-tagline {
+  margin: 0.4rem 0 0;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--hero-tagline);
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--accent-quiet);
+}
+
+/* --------------------------------------------------------------- surface --
+   Sparse by construction: the whitespace is the contrast now that the
+   background no longer changes. */
+.surface {
+  position: relative;
+  background: var(--deep-bg);
+  padding-bottom: 14svh;
+}
+
+.surface-web {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.surface-web line { stroke: var(--surface-line); stroke-width: 1; }
+
+.surface-inner {
+  position: relative;
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 14svh 2rem 0;
+}
+
+.intro h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.intro p {
+  margin: 0.5rem 0 0;
+  max-width: 52ch;
+  font-size: 1.25rem;
+  font-weight: 300;
+  line-height: 1.65;
+  color: var(--surface-muted);
+}
+
+.projects { list-style: none; margin: 9svh 0 0; padding: 0; }
+
+.row {
+  display: grid;
+  grid-template-columns: 20px minmax(13rem, max-content) 1fr;
+  align-items: center;
+  gap: 0 2rem;
+  width: 100%;
+  padding: 1.5rem 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.row-dot {
+  display: block;
+  justify-self: center;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-quiet);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+/* Hover is the accent gaining strength, not a new colour. */
+.row:hover .row-dot,
+.row:focus-visible .row-dot { background: var(--accent); transform: scale(1.3); }
+
+.row-name { font-size: 1.25rem; font-weight: 400; }
+
+.row:hover .row-name,
+.row:focus-visible .row-name {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 5px;
+}
+
+.row-line { font-size: 1rem; color: var(--surface-faint); }
+
+.row:focus-visible { outline: 1px solid var(--surface-fg); outline-offset: 6px; }
+
+/* ------------------------------------------------------------ below fold -- */
+.below { padding: 6svh 0 8rem; }
+
+.block {
+  max-width: 62rem;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.block { margin-bottom: 5.5rem; }
+
+.block h2 {
+  margin: 0 0 1.5rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--surface-faint);
+}
+
+.mono { font-family: var(--mono); }
+
+.skills { margin: 0; }
+.skills div { display: grid; grid-template-columns: 8rem 1fr; gap: 1rem; padding: 0.55rem 0; }
+.skills dt { color: var(--surface-faint); }
+.skills dd { margin: 0; color: var(--surface-muted); }
+
+.recognition { border-left: 1px solid var(--surface-line); padding-left: 3.5rem; }
+.citation { margin: 0 0 1.1rem; max-width: 52ch; font-size: 1.25rem; font-weight: 300; line-height: 1.6; }
+.attribution { margin: 0; max-width: 54ch; font-size: 0.9rem; color: var(--surface-faint); }
+
+.experience { list-style: none; margin: 0; padding: 0; }
+.experience > li { margin-bottom: 3rem; }
+.exp-head { display: flex; flex-wrap: wrap; gap: 0 1rem; align-items: baseline; justify-content: space-between; max-width: 46rem; }
+.exp-role { font-size: 1.1rem; font-weight: 400; }
+.exp-dates { font-size: 11px; color: var(--surface-faint); }
+.exp-org { margin: 0.25rem 0 0.9rem; font-size: 0.95rem; color: var(--surface-faint); }
+.experience ul { list-style: none; margin: 0; padding: 0; }
+.experience ul li {
+  position: relative;
+  max-width: 66ch;
+  padding: 0.3rem 0 0.3rem 1.1rem;
+  font-size: 0.95rem;
+  color: var(--surface-muted);
+}
+.experience ul li::before { content: "—"; position: absolute; left: 0; color: var(--surface-dot); }
+
+.open-source p, .contact p { margin: 0.35rem 0; max-width: 66ch; color: var(--surface-muted); }
+.contact { border-top: 1px solid var(--surface-line); padding-top: 2.25rem; }
+
+a {
+  color: var(--surface-fg);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--surface-dot);
+  text-underline-offset: 3px;
+}
+a:hover { text-decoration-color: var(--accent); }
+
+/* ----------------------------------------------------------------- panel --
+   The opposite register: tight, monospace, information-dense. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  /* Light-handed on purpose. The panel is darker than the surface, so a heavy
+     scrim composites the surround to the panel's own colour and the panel
+     loses its edge. Dimming is the wrong tool here; depth does the work. */
+  background: rgba(4, 8, 7, 0.42);
+}
+
+.panel {
+  position: fixed;
+  z-index: 50;
+  overflow: auto;
+  background: var(--panel-bg);
+  border: 1px solid var(--panel-edge);
+  color: var(--panel-fg);
+}
+
+.panel-sheet {
+  inset: auto 0 0 0;
+  width: 100%;
+  max-height: 88svh;
+  transform-origin: bottom center;
+}
+
+.panel-body { padding: 2.5rem clamp(1.5rem, 3.5vw, 2.5rem) 2.5rem; }
+
+.panel-body h2 {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--panel-fg);
+}
+
+.panel-line {
+  margin: 0.6rem 0 1.75rem;
+  max-width: 48ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--panel-sub);
+}
+
+.panel-details { margin: 0; border-top: 1px solid var(--panel-line); }
+
+.detail {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.9rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--panel-rule);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--panel-value);
+}
+
+.detail dt { color: var(--panel-label); }
+.detail dd { margin: 0; }
+
+/* Links stay in the panel's technical register: same monospace, the accent
+   already used for interactive elements in here, underline only on hover. */
+.detail-links a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.detail-links a:hover,
+.detail-links a:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.panel-trace {
+  margin: 1.5rem 0 0;
+  padding-left: 0.85rem;
+  /* The accent at full strength — the one place it is stated outright. */
+  border-left: 1px solid var(--accent);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--panel-whisper);
+}
+
+.panel-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.4rem 0.5rem;
+  border: 0;
+  background: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--panel-label);
+  cursor: pointer;
+}
+
+.panel-close:hover { color: var(--accent); }
+.panel-close-key { border: 1px solid var(--panel-line); padding: 0 0.35rem; color: var(--panel-whisper); }
+
+/* ------------------------------------------------------------ responsive -- */
+@media (max-width: 720px) {
+  .hero-intro { top: 2rem; padding: 0 1.25rem; }
+  .surface-inner { padding: 12svh 1.25rem 0; }
+  .intro h1 { font-size: 1.35rem; }
+  .intro p { font-size: 1.1rem; }
+  .projects { margin-top: 7svh; }
+  .row {
+    grid-template-columns: 18px 1fr;
+    align-items: start;
+    gap: 0 0.9rem;
+    padding: 1.15rem 0;
+  }
+  .row-dot { margin-top: 0.6em; }
+  .row-name { font-size: 1.15rem; }
+  .row-line { grid-column: 2; font-size: 0.95rem; }
+  .block { padding: 0 1.25rem; }
+  .recognition { padding-left: 1.5rem; }
+  .citation { font-size: 1.1rem; }
+  .skills div { grid-template-columns: 1fr; gap: 0.15rem; }
+  .detail { grid-template-columns: 1fr; gap: 0.1rem; padding: 0.55rem 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
