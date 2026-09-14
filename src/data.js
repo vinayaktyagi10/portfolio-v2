@@ -29,53 +29,6 @@ export const projects = [
     ],
   },
   {
-    id: "warren",
-    name: "WARREN",
-    line: "Coordinated fraud-ring detection for payments",
-    panelLine:
-      "Coordinated fraud-ring detection for payments. Built and evaluated against the IBM AML dataset — 5M+ transfers, 370 labelled rings across 8 typologies.",
-    about: [
-      "A rabbit warren looks like separate burrows from the surface. WARREN finds the tunnels: sets of accounts that transact as if unrelated but are worked by one coordinated operation. Per-transaction scoring is structurally blind to that loss class, because a ring is designed so each individual transfer looks ordinary. The unit of defence is the ring, not the payment.",
-      "One pass. Filter to ACH, which carries 86.6% of laundering value against 11.75% of ordinary traffic, so one filter drops 88% of the ledger while keeping 86.6% of the laundering. Slice time into overlapping windows — load-bearing, not an optimisation, since some accounts sit in dozens of distinct rings and over the whole ledger those hubs chain unrelated rings into one blob. Connect co-transacting accounts with union-find, rank the candidates with a hand-written twelve-feature logistic regression, then have a model assess the top ones and clamp its answer in code.",
-      "The graph pass is built for recall and is poor at precision on its own: 74% of labelled rings, but 95,000 candidates at 0.2% purity. Ranking is what makes it workable. At 50 alerts WARREN recovers 39 of 182 held-out rings at 14.32% precision, about 22x lift against the 0.64% laundering rate of the population the ranker actually scores. A much better-looking multiple is available against the raw ledger, but that denominator credits the ranker with the channel filter's work. Recall is reported per ring shape rather than averaged, because one average hides a shape the detector never finds: BIPARTITE sits at 25%.",
-      "The enforcement ceiling is the headline, not the interception. An oracle detector told the true ring membership, acting at the earliest instant any windowed detector could see the ring, could still stop only 10.76% of ring value at 72-hour windows. Nine tenths of a ring's money has already moved before anyone can see the ring at all. WARREN reaches 0.66% of that ceiling, which is small and is stated as small. Five times a good-looking number turned out to be an artefact and was thrown away, and that write-up is the project's best material.",
-      "The model proposes, the policy disposes. Model output is untrusted input: schema-constrained to three actions, then clamped in code before it can affect money. A block needs ranker score at or above 0.90 and stated confidence at or above 0.80, under a value ceiling above which a person decides however certain the machine is. Allow is withheld once the ranker is above 0.50, so the model cannot wave through what the detector flagged, and an unrecognised action lands on review instead of being interpreted. Decisions and the enforcement actions taken on them go into two cross-referenced hash-chained logs, verified against real tamper attempts.",
-    ],
-    details: [
-      ["stack", "go · postgresql · union-find · logistic regression · gemini api"],
-      ["rings", "union-find over ach transfers, sliced into overlapping time windows"],
-      ["channel", "ach carries 86.6% of laundering value against 11.75% of ordinary traffic"],
-      ["ranking", "12-feature logistic regression — coefficients that can be explained, not just predicted from"],
-      ["gate", "policy layer overrides the model: block needs score ≥0.90 and confidence ≥0.80 under a value ceiling; malformed output routes to human review"],
-      ["audit", "append-only hash-chained decision log, verified against real tamper attempts"],
-      ["corrected", "baseline first favoured a simpler tabular scorer — two measurement errors found, the corrected and less flattering result published"],
-    ],
-    links: [{ label: "repo", href: "https://github.com/vinayaktyagi10/WARREN" }],
-  },
-  {
-    id: "driftless",
-    name: "driftless",
-    line: "GPS-denied dead reckoning for Android",
-    panelLine:
-      "GPS-denied dead reckoning for Android — holding position through tunnels, urban canyons and parking structures.",
-    about: [
-      "Most vehicles on Indian roads have no factory inertial navigation. The map is a phone in a dashboard mount, and that phone loses GNSS outright in tunnels, parking structures and urban canyons. driftless turns a bare smartphone IMU into a self-contained dead-reckoning system that holds lane-level position through a blackout and fuses back onto GNSS the instant it returns. Built for Smart India Hackathon problem statement 26168, set by ISRO.",
-      "Fusion is an unscented Kalman filter in square-root form, with Cholesky rank-1 covariance updates and SO(3) rotations. Unscented rather than extended because the propagation is meaningfully nonlinear, and sigma points need no Jacobian for someone to derive correctly and then keep correct. A hidden-Markov map matcher corrects accumulated drift by snapping the fused trajectory back onto the road network, which makes the road a measurement rather than something drawn underneath the track.",
-      "A temporal convolutional network estimates forward speed and heading from the IMU alone, trained in PyTorch on IO-VNBD and exported through ONNX — to TFLite for the phone, and left as ONNX for a separate C++ edge engine that mirrors the same filter and map-matching design, retuned for roughly 200Hz fibre-optic gyro input. Both sides run the same trained weights.",
-      "Each numerical component is validated in isolation — sigma-point generation, the predict and update steps, drift characterisation — rather than only end to end, because an end-to-end error number cannot say which stage produced it. The evidence is cross-validation, Allan-variance IMU noise characterisation and held-out blackout error, not one headline accuracy figure. Blackouts are injected by hand, since tunnels cannot be summoned on demand.",
-    ],
-    details: [
-      ["stack", "kotlin/android · c++ · python · onnx / tflite"],
-      ["fusion", "unscented kalman filter over imu + gnss — square-root form, cholesky rank-1 covariance updates, so(3) rotations"],
-      ["matching", "hmm map matcher corrects drift by snapping the fused trajectory back onto the road network"],
-      ["tests", "sigma-point generation, predict/update, drift characterisation — each numerical component validated in isolation, not only end-to-end"],
-      ["model", "tcn estimates forward speed and heading from imu alone, exported to onnx/tflite for on-device inference"],
-      ["evidence", "cross-validation, allan-variance imu noise characterisation, held-out blackout error — not a single accuracy number"],
-      ["blackouts", "manual gnss-blackout injection, since tunnels cannot be summoned on demand"],
-    ],
-    links: [{ label: "repo", href: "https://github.com/vinayaktyagi10/driftless" }],
-  },
-  {
     id: "novaforge",
     name: "NovaForge",
     line: "Multi-factor approval and audit platform",

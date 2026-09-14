@@ -203,7 +203,7 @@ main {
 .intro p {
   margin: 0.5rem 0 0;
   max-width: 52ch;
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 300;
   line-height: 1.65;
   color: var(--surface-muted);
@@ -213,11 +213,18 @@ main {
 
 .row {
   display: grid;
-  grid-template-columns: 20px minmax(13rem, max-content) 1fr;
+  /* 15rem, not 13rem: at the 1.4rem name size "MUJ Placement Kite" measures
+     214.61px, which overran the old 13rem floor. Each row is its own grid
+     (separate <button>s), so a column that sizes to max-content on only one
+     row silently shifts that row's description out of the shared column —
+     measured at 6.61px. The floor has to clear the longest name outright. */
+  grid-template-columns: 20px minmax(15rem, max-content) 1fr;
   align-items: center;
   gap: 0 2rem;
   width: 100%;
-  padding: 1.5rem 0;
+  /* 1.9rem rather than 1.5rem: three rows in the vertical space authored for
+     five otherwise leave the list stranded at the top of the section. */
+  padding: 1.9rem 0;
   border: 0;
   background: none;
   font: inherit;
@@ -240,7 +247,7 @@ main {
 .row:hover .row-dot,
 .row:focus-visible .row-dot { background: var(--accent); transform: scale(1.3); }
 
-.row-name { font-size: 1.25rem; font-weight: 400; }
+.row-name { font-size: 1.4rem; font-weight: 400; }
 
 .row:hover .row-name,
 .row:focus-visible .row-name {
@@ -256,21 +263,43 @@ main {
 /* ------------------------------------------------------------ below fold -- */
 .below { padding: 6svh 0 8rem; }
 
+/* The 20px dot gutter is the only structural column on the page, and the
+   surface rows are the only thing that used it. Repeating it here — same
+   width, same 2rem gap, a marker dot where the row dot would be — makes the
+   below-fold read as the same document rather than an appendix. */
 .block {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 0 2rem;
   max-width: 62rem;
-  margin: 0 auto;
+  margin: 0 auto 5.5rem;
   padding: 0 2rem;
 }
 
-.block { margin-bottom: 5.5rem; }
+.block > * { grid-column: 2; }
 
 .block h2 {
+  position: relative;
   margin: 0 0 1.5rem;
   font-size: 0.78rem;
   font-weight: 500;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--surface-faint);
+}
+
+/* Sits in the gutter, on the same centre line as a row dot. Dimmer than
+   --accent-quiet: these are markers, not things you can click. */
+.block h2::before {
+  content: "";
+  position: absolute;
+  left: -42px;
+  top: 0.5em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--surface-dot);
+  transform: translate(-50%, -50%);
 }
 
 .mono { font-family: var(--mono); }
@@ -280,7 +309,18 @@ main {
 .skills dt { color: var(--surface-faint); }
 .skills dd { margin: 0; color: var(--surface-muted); }
 
-.recognition { border-left: 1px solid var(--surface-line); padding-left: 3.5rem; }
+.recognition { position: relative; }
+.recognition::after {
+  content: "";
+  position: absolute;
+  left: calc(2rem + 10px);
+  /* Starts below the heading block (h2 line box + its 1.5rem margin), so the
+     marker dot and the rule read as two separate marks, not one broken one. */
+  top: 2.8rem;
+  bottom: 0;
+  width: 1px;
+  background: var(--surface-line);
+}
 .citation { margin: 0 0 1.1rem; max-width: 52ch; font-size: 1.25rem; font-weight: 300; line-height: 1.6; }
 .attribution { margin: 0; max-width: 54ch; font-size: 0.9rem; color: var(--surface-faint); }
 
@@ -479,8 +519,9 @@ a:hover { text-decoration-color: var(--accent); }
   .row-dot { margin-top: 0.6em; }
   .row-name { font-size: 1.15rem; }
   .row-line { grid-column: 2; font-size: 0.95rem; }
-  .block { padding: 0 1.25rem; }
-  .recognition { padding-left: 1.5rem; }
+  .block { grid-template-columns: 18px minmax(0, 1fr); gap: 0 0.9rem; padding: 0 1.25rem; }
+  .block h2::before { left: -23.4px; }
+  .recognition::after { left: calc(1.25rem + 9px); }
   .citation { font-size: 1.1rem; }
   .skills div { grid-template-columns: 1fr; gap: 0.15rem; }
   .detail { grid-template-columns: 1fr; gap: 0.1rem; padding: 0.55rem 0; }

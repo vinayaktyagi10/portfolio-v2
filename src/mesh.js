@@ -1,7 +1,7 @@
 // Mesh geometry. Pure functions so the node <div>s and the SVG connector lines
 // are driven by exactly one position calculation — no second source of truth.
 
-export const PROJECT_COUNT = 5;
+export const PROJECT_COUNT = 3;
 export const NODE_COUNT = 10;
 
 // Deliberately knotted start: everything crowded into the middle so no
@@ -12,26 +12,31 @@ const TANGLE = [
   [0.269, 0.484], [0.731, 0.602], [0.410, 0.742], [0.647, 0.696],
 ];
 
-// Where the five unlabelled nodes drift before fading out.
+// Where the seven unlabelled nodes drift before fading out. Indexed by
+// `i - PROJECT_COUNT`, so this array grew by two when the project count
+// dropped from five to three: same NODE_COUNT, same tangle density, two more
+// strands that resolve into nothing. The two added rests fill the left flank
+// and the bottom centre, which the five-decoy ring left empty.
 const DECOY_REST = [
   [0.115, 0.180], [0.868, 0.243], [0.196, 0.812],
-  [0.902, 0.700], [0.724, 0.126],
+  [0.902, 0.700], [0.724, 0.126], [0.088, 0.560],
+  [0.540, 0.868],
 ];
 
 // Fallback resting spots for the project nodes, used only when the surface
 // rows have not been measured yet (first paint, reduced motion).
 const PROJECT_FALLBACK = [
-  [0.22, 0.32], [0.41, 0.24], [0.58, 0.46], [0.76, 0.34], [0.44, 0.66],
+  [0.26, 0.34], [0.40, 0.50], [0.54, 0.66],
 ];
 
 // Each node starts moving at a different scroll progress, so the knot comes
-// apart strand by strand rather than all at once. The decoys (5-9) go first;
+// apart strand by strand rather than all at once. The decoys (3-9) go first;
 // the labelled projects resolve last, so the payload arrives after the noise
-// has cleared.
-// DELAY[4] is 0.16 rather than 0.18 to keep the WARREN and MUJ Placement Kite
-// labels from crossing: at 0.18 their boxes overlapped by up to 32px between
-// p 0.483 and 0.499.
-const DELAY = [0.34, 0.30, 0.26, 0.22, 0.16, 0.02, 0.06, 0.10, 0.04, 0.12];
+// has cleared. MIRAGE (0) is deliberately the last node to move.
+// The old DELAY[4] = 0.16 exception existed only to separate the WARREN and
+// MUJ Placement Kite labels. With WARREN gone that constraint is gone too;
+// the three remaining labels are re-verified clear across the whole unravel.
+const DELAY = [0.34, 0.28, 0.22, 0.02, 0.08, 0.04, 0.12, 0.06, 0.14, 0.10];
 
 export const EDGES = [
   [0, 1], [1, 2], [2, 3], [3, 4],
@@ -41,12 +46,12 @@ export const EDGES = [
 // The connectors that survive the unravel as quiet architecture lines: the
 // chain through the project nodes, which resolves into the vertical run of
 // row dots on the surface below.
-const PERSISTENT = new Set(["0-1", "1-2", "2-3", "3-4"]);
+const PERSISTENT = new Set(["0-1", "1-2"]);
 export const edgeKey = (a, b) => `${a}-${b}`;
 export const isPersistent = (a, b) => PERSISTENT.has(edgeKey(a, b));
 
 // Sized by significance; MIRAGE is the flagship and reads largest.
-export const NODE_RADIUS = [7.5, 5.5, 5.5, 5, 4.5, 2, 2.5, 2, 2.5, 2];
+export const NODE_RADIUS = [7.5, 5.5, 5, 2, 2.5, 2, 2.5, 2, 2.5, 2];
 
 // Idle drift. Distinct phases so the nodes never wander in unison, and two
 // incommensurate frequencies per axis so the path does not visibly loop.
