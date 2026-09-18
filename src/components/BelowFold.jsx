@@ -27,7 +27,7 @@ export default function BelowFold() {
         </p>
       </section>
 
-      <section className="block">
+      <section className="block timeline">
         <h2>Experience</h2>
         <ul className="experience">
           {experience.map((item) => (

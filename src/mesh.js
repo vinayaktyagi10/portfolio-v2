@@ -53,6 +53,19 @@ export const isPersistent = (a, b) => PERSISTENT.has(edgeKey(a, b));
 // Sized by significance; MIRAGE is the flagship and reads largest.
 export const NODE_RADIUS = [7.5, 5.5, 5, 2, 2.5, 2, 2.5, 2, 2.5, 2];
 
+// Depth. 1 is the surface — the plane the row dots live on — and 0 is the
+// bottom of the water. Every node rises to 1 as it resolves, so depth is a
+// property of the tangle, not of the landing: at t = 1 all ten are at the
+// surface and nothing derived from depth can move them. Projects and decoys
+// are mixed across the range on purpose; a knot whose payload sat nearer the
+// eye would read as significant before the unravel gives it away.
+export const DEPTH = [0.7, 0.45, 0.6, 0.25, 0.85, 0.4, 0.15, 0.7, 0.3, 0.55];
+
+// Pointer parallax, px at full pointer offset for a node at depth 0. Deeper
+// nodes shift more, and against the pointer — layers behind glass, not a
+// cursor-follower. Scaled by `far`, so it is exactly 0 for a resolved node.
+const PARALLAX_PX = 18;
+
 // Idle drift. Distinct phases so the nodes never wander in unison, and two
 // incommensurate frequencies per axis so the path does not visibly loop.
 const DRIFT_PHASE = [0, 1.7, 3.4, 0.9, 2.6, 4.3, 1.2, 5.1, 2.2, 3.9];
@@ -78,7 +91,7 @@ const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) 
  * `time` (seconds) adds the pre-scroll idle drift. It is damped to exactly
  * zero by the time the node has resolved, so it cannot disturb the landing.
  */
-export function nodePos(i, p, { w, h, runway, targets }, time = 0) {
+export function nodePos(i, p, { w, h, runway, targets }, time = 0, pointer = null) {
   const [sxN, syN] = TANGLE[i];
   const sx = sxN * w;
   const sy = syN * h;
@@ -131,18 +144,36 @@ export function nodePos(i, p, { w, h, runway, targets }, time = 0) {
         0.3 * (Math.cos(time * 0.52 + ph * 0.6) - Math.cos(ph * 0.6)));
   }
 
-  // Decoys thin out as the real structure emerges.
-  const opacity = isProject ? 1 : 1 - clamp01((p - 0.42) / 0.36);
+  // How far below the surface the node still is. Written as a product with
+  // `1 - t` rather than as `depth + (1 - depth) * t`, so that at t = 1 it is
+  // exactly 0 by construction and not by floating-point luck.
+  const far = (1 - DEPTH[i]) * (1 - t);
+  const depth = 1 - far;
+  if (pointer && far > 0) {
+    dx -= pointer.x * PARALLAX_PX * far;
+    dy -= pointer.y * PARALLAX_PX * far;
+  }
 
-  return { x: x + dx, y: y + dy, opacity };
+  // Decoys thin out as the real structure emerges; everything is dimmer the
+  // deeper it sits.
+  const base = isProject ? 1 : 1 - clamp01((p - 0.42) / 0.36);
+  const opacity = base * (0.5 + 0.5 * depth);
+
+  return { x: x + dx, y: y + dy, opacity, depth };
 }
 
-/** Opacity + stroke width of an edge at progress `p`. */
-export function edgeStyle(a, b, p) {
+/**
+ * Opacity + stroke width of an edge at progress `p`. `depth` is the mean of
+ * its endpoints' current depth: a strand between two deep nodes is finer
+ * than one at the surface, and the persistent chain arrives at 0.5px — the
+ * width it always had — when both ends have resolved.
+ */
+export function edgeStyle(a, b, p, depth = 1) {
+  const width = 0.3 + 0.2 * depth;
   if (isPersistent(a, b)) {
-    return { opacity: 0.55 + 0.35 * (1 - clamp01(p / 0.8)), width: 0.5 };
+    return { opacity: 0.55 + 0.35 * (1 - clamp01(p / 0.8)), width };
   }
-  return { opacity: 0.75 * (1 - clamp01((p - 0.12) / 0.5)), width: 0.5 };
+  return { opacity: 0.75 * (1 - clamp01((p - 0.12) / 0.5)), width };
 }
 
 /**

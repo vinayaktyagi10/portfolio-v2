@@ -1,6 +1,10 @@
 :root {
   --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* One display face, used exactly twice: the name in the hero and the name
+     at the head of the surface. Everything else stays in the two working
+     faces, so the serif is the signature rather than the texture. */
+  --display: "Newsreader", "Iowan Old Style", Georgia, serif;
 
   /* One hue, two depths. The mesh and the surface share a background: the
      unravel is the tangle resolving into text, not a change of place. The
@@ -93,6 +97,39 @@ main {
   background: var(--deep-bg);
 }
 
+/* Vignette: the knot sits in the light, the edges of the stage fall away.
+   Only darkens, so every text ratio on the stage can only improve. It fades
+   with the stage, which is right — the surface is flat by design. */
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 70% 62% at 50% 46%,
+    transparent 0%,
+    rgba(4, 8, 7, 0.35) 78%,
+    rgba(4, 8, 7, 0.62) 100%
+  );
+}
+
+/* Grain. One fixed layer over the whole document, so the flat hue reads as
+   material and the stage-to-surface crossfade does not change texture. Plain
+   opacity, no blend mode: a blended fixed layer forces the compositor to
+   re-blend every frame of a 200svh scroll. At 0.04 the measured lift to the
+   rendered background is +2.7 per RGB channel (surface and panel alike); the
+   contrast audit is run against the rendered value, not the token. */
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
 .mesh-lines {
   position: absolute;
   inset: 0;
@@ -142,9 +179,12 @@ main {
 
 .hero-name {
   margin: 0;
-  font-family: var(--sans);
-  font-size: 14px;
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-size: 1.35rem;
   font-weight: 400;
+  letter-spacing: 0.005em;
+  line-height: 1.2;
   color: var(--hero-name);
 }
 
@@ -184,7 +224,25 @@ main {
   pointer-events: none;
 }
 
-.surface-web line { stroke: var(--surface-line); stroke-width: 1; }
+.surface-web line {
+  stroke: var(--surface-line);
+  stroke-width: 1;
+  transition: stroke 0.25s ease;
+}
+
+/* Hovering a row lights the strands attached to its dot — the same "signal
+   getting stronger" the row dot itself does, carried along the web. */
+.surface-web line.lit { stroke: var(--accent-quiet); }
+
+/* The dots one strand away answer with a single pulse. The keyframe restarts
+   each time the class is applied, so it is a reply, not a state. */
+.row-dot.near { animation: dot-pulse 0.55s ease-out; }
+
+@keyframes dot-pulse {
+  0% { transform: scale(1); background: var(--accent-quiet); }
+  35% { transform: scale(1.5); background: var(--accent); }
+  100% { transform: scale(1); background: var(--accent-quiet); }
+}
 
 .surface-inner {
   position: relative;
@@ -195,9 +253,12 @@ main {
 
 .intro h1 {
   margin: 0;
-  font-size: 1.5rem;
+  font-family: var(--display);
+  font-optical-sizing: auto;
+  font-size: 2rem;
   font-weight: 400;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.005em;
+  line-height: 1.15;
 }
 
 .intro p {
@@ -324,8 +385,32 @@ main {
 .citation { margin: 0 0 1.1rem; max-width: 52ch; font-size: 1.25rem; font-weight: 300; line-height: 1.6; }
 .attribution { margin: 0; max-width: 54ch; font-size: 0.9rem; color: var(--surface-faint); }
 
+/* The rail the mesh resolved onto, carried through the timeline: a 1px run in
+   the gutter with one tick per entry on the role's baseline. Same centre line
+   as the row dots and the heading markers, so the page keeps one axis. */
+.timeline { position: relative; }
+.timeline::after {
+  content: "";
+  position: absolute;
+  left: calc(2rem + 10px);
+  top: 2.8rem;
+  bottom: 0.4rem;
+  width: 1px;
+  background: var(--surface-line);
+}
 .experience { list-style: none; margin: 0; padding: 0; }
-.experience > li { margin-bottom: 3rem; }
+.experience > li { position: relative; margin-bottom: 3rem; }
+.experience > li::before {
+  content: "";
+  position: absolute;
+  left: -42px;
+  top: 0.85em;
+  width: 9px;
+  height: 1px;
+  background: var(--surface-dot);
+  transform: translate(-50%, -50%);
+  z-index: 1;
+}
 .exp-head { display: flex; flex-wrap: wrap; gap: 0 1rem; align-items: baseline; justify-content: space-between; max-width: 46rem; }
 .exp-role { font-size: 1.1rem; font-weight: 400; }
 .exp-dates { font-size: 11px; color: var(--surface-faint); }
@@ -362,6 +447,10 @@ a:hover { text-decoration-color: var(--accent); }
      scrim composites the surround to the panel's own colour and the panel
      loses its edge. Dimming is the wrong tool here; depth does the work. */
   background: rgba(4, 8, 7, 0.42);
+  /* Depth rather than dimming: the surface is still there, seen through
+     water. `backdrop-filter` only runs while a panel is mounted. */
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 .panel {
@@ -473,16 +562,57 @@ a:hover { text-decoration-color: var(--accent); }
   text-underline-offset: 3px;
 }
 
+/* The trace is the one thing in the panel that moves: a signal walking the
+   pipeline. Steps sit on a rail; each lights as the signal reaches it, and
+   the rail fills behind it. Once through, then it holds — a panel is for
+   reading, not for watching. */
 .panel-trace {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.6rem;
   margin: 1.5rem 0 0;
-  padding-left: 0.85rem;
-  /* The accent at full strength — the one place it is stated outright. */
-  border-left: 1px solid var(--accent);
+  padding: 0;
+  list-style: none;
   font-family: var(--mono);
   font-size: 11px;
   letter-spacing: 0.04em;
   color: var(--panel-whisper);
 }
+
+.trace-step {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--panel-whisper);
+  transition: color 0.3s ease;
+}
+
+.trace-step.lit { color: var(--panel-value); }
+
+.trace-dot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--panel-edge);
+  transition: background 0.3s ease;
+}
+
+.trace-step.lit .trace-dot { background: var(--accent); }
+
+/* The rail segment between this step and the next. Scaled from the left so it
+   fills toward the next dot, and lit one beat before that dot is. */
+.trace-rail {
+  flex: none;
+  width: 1.2rem;
+  height: 1px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.38s ease;
+}
+
+.trace-rail.lit { transform: scaleX(1); }
 
 .panel-close {
   position: absolute;
@@ -507,7 +637,7 @@ a:hover { text-decoration-color: var(--accent); }
 @media (max-width: 720px) {
   .hero-intro { top: 2rem; padding: 0 1.25rem; }
   .surface-inner { padding: 12svh 1.25rem 0; }
-  .intro h1 { font-size: 1.35rem; }
+  .intro h1 { font-size: 1.7rem; }
   .intro p { font-size: 1.1rem; }
   .projects { margin-top: 7svh; }
   .row {
@@ -521,7 +651,10 @@ a:hover { text-decoration-color: var(--accent); }
   .row-line { grid-column: 2; font-size: 0.95rem; }
   .block { grid-template-columns: 18px minmax(0, 1fr); gap: 0 0.9rem; padding: 0 1.25rem; }
   .block h2::before { left: -23.4px; }
-  .recognition::after { left: calc(1.25rem + 9px); }
+  .recognition::after,
+  .timeline::after { left: calc(1.25rem + 9px); }
+  .experience > li::before { left: -23.4px; }
+  .hero-name { font-size: 1.2rem; }
   .citation { font-size: 1.1rem; }
   .skills div { grid-template-columns: 1fr; gap: 0.15rem; }
   .detail { grid-template-columns: 1fr; gap: 0.1rem; padding: 0.55rem 0; }

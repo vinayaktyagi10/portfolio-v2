@@ -4,6 +4,7 @@ import {
   useAnimationFrame,
   useMotionValue,
   useMotionValueEvent,
+  useSpring,
   useTransform,
 } from "framer-motion";
 import {
@@ -26,17 +27,58 @@ import { projects } from "../data";
  *
  * NODE_COUNT is a module constant, so the hook count is stable across renders.
  */
-function useNodePositions(progress, time, ctx) {
+function useNodePositions(progress, time, pointerX, pointerY, ctx) {
   return Array.from({ length: NODE_COUNT }, (_, i) =>
     // eslint-disable-next-line react-hooks/rules-of-hooks
-    useTransform([progress, time], ([p, t]) => nodePos(i, p, ctx, t))
+    useTransform([progress, time, pointerX, pointerY], ([p, t, px, py]) =>
+      nodePos(i, p, ctx, t, { x: px, y: py })
+    )
   );
+}
+
+/**
+ * Pointer offset from the stage centre, each axis in [-1, 1], as springs.
+ * Only on devices that hover: on touch, pointermove is the finger scrolling,
+ * and shifting the tangle under it would fight the scroll.
+ */
+function usePointerOffset(stageRef, enabled) {
+  const rawX = useMotionValue(0);
+  const rawY = useMotionValue(0);
+  const spring = { stiffness: 60, damping: 18, mass: 0.6 };
+  const x = useSpring(rawX, spring);
+  const y = useSpring(rawY, spring);
+
+  useEffect(() => {
+    if (!enabled || !window.matchMedia("(hover: hover)").matches) return undefined;
+    const onMove = (e) => {
+      const stage = stageRef.current;
+      if (!stage) return;
+      const r = stage.getBoundingClientRect();
+      rawX.set(((e.clientX - r.left) / r.width - 0.5) * 2);
+      rawY.set(((e.clientY - r.top) / r.height - 0.5) * 2);
+    };
+    const onLeave = () => {
+      rawX.set(0);
+      rawY.set(0);
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    document.addEventListener("pointerleave", onLeave);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerleave", onLeave);
+    };
+  }, [enabled, stageRef, rawX, rawY]);
+
+  return [x, y];
 }
 
 function Node({ i, pos, progress, reduced }) {
   const x = useTransform(pos, (v) => v.x);
   const y = useTransform(pos, (v) => v.y);
   const opacity = useTransform(pos, (v) => v.opacity);
+  // Deeper nodes read smaller; a resolved node is at the surface, scale 1, so
+  // the authored radius is what hands off to the row dot.
+  const scale = useTransform(pos, (v) => 0.7 + 0.3 * v.depth);
   const labels = useTransform(progress, (p) => labelOpacity(p, reduced));
   // Project nodes stay as anonymous as the decoys until the mesh starts to
   // resolve — nothing in the tangle should read as significant. They settle on
@@ -55,6 +97,7 @@ function Node({ i, pos, progress, reduced }) {
           height: r * 2,
           marginLeft: -r,
           marginTop: -r,
+          scale,
           backgroundColor: project ? tint : "#2f6350",
         }}
       />
@@ -81,7 +124,8 @@ export default function Mesh({ progress, stageRef, ctx, reduced }) {
   // React would re-render the tree every frame, which is the whole thing the
   // scroll side avoids.
   const time = useMotionValue(0);
-  const positions = useNodePositions(progress, time, ctx);
+  const [pointerX, pointerY] = usePointerOffset(stageRef, !reduced);
+  const positions = useNodePositions(progress, time, pointerX, pointerY, ctx);
 
   const draw = () => {
     const p = progress.get();
@@ -91,7 +135,7 @@ export default function Mesh({ progress, stageRef, ctx, reduced }) {
       const [a, b] = EDGES[e];
       const pa = positions[a].get();
       const pb = positions[b].get();
-      const style = edgeStyle(a, b, p);
+      const style = edgeStyle(a, b, p, (pa.depth + pb.depth) / 2);
       line.setAttribute("x1", pa.x);
       line.setAttribute("y1", pa.y);
       line.setAttribute("x2", pb.x);
@@ -124,8 +168,10 @@ export default function Mesh({ progress, stageRef, ctx, reduced }) {
   );
   // Same scroll value as the nodes, deliberately on a different range: the
   // copy arrives while the first strands are still coming apart, and is
-  // settled well before they are. Nothing further happens to it after 0.3.
-  const introOpacity = useTransform(progress, [0.1, 0.3], [0, 1]);
+  // settled well before they are. It retires over the same window as the mesh
+  // labels, so that by the time the surface's own heading fades up underneath
+  // there is one "Vinayak Tyagi" on screen, not two 138px apart.
+  const introOpacity = useTransform(progress, [0.1, 0.3, 0.86, 0.96], [0, 1, 1, 0]);
   const hintOpacity = useTransform(progress, [0, 0.12], [1, 0]);
 
   return (

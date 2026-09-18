@@ -1,10 +1,15 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue, useSpring } from "framer-motion";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// Pointer tilt at the panel's edge, in degrees. 0 disables it. Kept small on
+// purpose: a 3D-transformed layer loses subpixel text rendering, and the
+// panel is the page's densest reading surface.
+const TILT_DEG = 1.6;
 
 let scrollLocks = 0;
 
@@ -55,6 +60,16 @@ export default function ProjectPanel({ project, origin, onClose, mobile, reduced
   // reader who wants the whole story asks for it.
   const [expanded, setExpanded] = useState(false);
 
+  // Pointer tilt, desktop only. TILT_DEG at the panel's edge, sprung so it
+  // settles rather than tracks. The transform composes with the zoom's scale
+  // and keeps the zoom's origin: a rotation about an off-centre point is still
+  // a tilt, just with a few px of drift the spring absorbs.
+  const tiltX = useMotionValue(0);
+  const tiltY = useMotionValue(0);
+  const tiltSpring = { stiffness: 140, damping: 22, mass: 0.5 };
+  const rotateX = useSpring(tiltX, tiltSpring);
+  const rotateY = useSpring(tiltY, tiltSpring);
+
   useLayoutEffect(() => {
     const onResize = () => setBox(geometry(origin));
     window.addEventListener("resize", onResize);
@@ -100,6 +115,19 @@ export default function ProjectPanel({ project, origin, onClose, mobile, reduced
   }, []);
 
   const zoom = !mobile && !reduced;
+
+  const onTilt = (e) => {
+    if (!zoom || !settled || !panelRef.current) return;
+    const r = panelRef.current.getBoundingClientRect();
+    const nx = (e.clientX - r.left) / r.width - 0.5;
+    const ny = (e.clientY - r.top) / r.height - 0.5;
+    tiltX.set(-ny * TILT_DEG);
+    tiltY.set(nx * TILT_DEG);
+  };
+  const onTiltEnd = () => {
+    tiltX.set(0);
+    tiltY.set(0);
+  };
   const animation = mobile
     ? {
         initial: { y: "100%" },
@@ -129,7 +157,24 @@ export default function ProjectPanel({ project, origin, onClose, mobile, reduced
         width: box.width,
         maxHeight: box.maxHeight,
         transformOrigin: `${box.ox}px ${box.oy}px`,
+        ...(zoom && TILT_DEG > 0 ? { rotateX, rotateY, transformPerspective: 1400 } : {}),
       };
+
+  // The trace lights step by step once the panel has settled: step i, then the
+  // rail out of it, then step i + 1. With reduced motion it is simply lit.
+  const steps = project.trace ? project.trace.split(" → ") : [];
+  const [lit, setLit] = useState(reduced ? steps.length : 0);
+  useEffect(() => {
+    if (reduced || !settled || steps.length === 0) return undefined;
+    let n = 0;
+    const tick = () => {
+      n += 1;
+      setLit(n);
+      if (n < steps.length) timer = setTimeout(tick, 420);
+    };
+    let timer = setTimeout(tick, 650);
+    return () => clearTimeout(timer);
+  }, [reduced, settled, steps.length]);
 
   const reveal = (i) => ({
     initial: { opacity: 0, y: 6 },
@@ -156,6 +201,8 @@ export default function ProjectPanel({ project, origin, onClose, mobile, reduced
         style={style}
         {...animation}
         onAnimationComplete={() => setSettled(true)}
+        onPointerMove={onTilt}
+        onPointerLeave={onTiltEnd}
       >
         <button type="button" className="panel-close" onClick={onClose}>
           close
@@ -234,10 +281,21 @@ export default function ProjectPanel({ project, origin, onClose, mobile, reduced
             )}
           </motion.dl>
 
-          {project.trace && (
-            <motion.p className="panel-trace" {...reveal(4)}>
-              {project.trace}
-            </motion.p>
+          {steps.length > 0 && (
+            <motion.ul className="panel-trace" aria-label="trace" {...reveal(4)}>
+              {steps.map((step, i) => (
+                <li className={i < lit ? "trace-step lit" : "trace-step"} key={step}>
+                  <span className="trace-dot" aria-hidden="true" />
+                  {step}
+                  {i < steps.length - 1 && (
+                    <span
+                      className={i + 1 <= lit ? "trace-rail lit" : "trace-rail"}
+                      aria-hidden="true"
+                    />
+                  )}
+                </li>
+              ))}
+            </motion.ul>
           )}
         </div>
       </motion.div>

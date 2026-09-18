@@ -155,17 +155,21 @@ export default function App() {
   // few short stubs so it reads as a fragment of a larger graph.
   const web = useMemo(() => {
     if (!targets || targets.length < 2) return [];
+    // Each line remembers which row dots it touches, so the surface can light
+    // the strands attached to a hovered row without re-deriving the graph.
     const chain = targets
       .slice(1)
-      .map((t, i) => [targets[i].x, targets[i].y, t.x, t.y]);
+      .map((t, i) => ({ x1: targets[i].x, y1: targets[i].y, x2: t.x, y2: t.y, a: i, b: i + 1 }));
     const first = targets[0];
-    const last = targets[targets.length - 1];
-    const mid = targets[Math.floor(targets.length / 2)];
+    const lastIdx = targets.length - 1;
+    const last = targets[lastIdx];
+    const midIdx = Math.floor(targets.length / 2);
+    const mid = targets[midIdx];
     return [
       ...chain,
-      [first.x, first.y, first.x - 34, first.y - 30],
-      [mid.x, mid.y, mid.x + 44, mid.y - 22],
-      [last.x, last.y, last.x - 28, last.y + 34],
+      { x1: first.x, y1: first.y, x2: first.x - 34, y2: first.y - 30, a: 0, b: null },
+      { x1: mid.x, y1: mid.y, x2: mid.x + 44, y2: mid.y - 22, a: midIdx, b: null },
+      { x1: last.x, y1: last.y, x2: last.x - 28, y2: last.y + 34, a: lastIdx, b: null },
     ];
   }, [targets]);
 
@@ -183,6 +187,7 @@ export default function App() {
 
   return (
     <div className={reduced ? "app reduced" : "app"}>
+      <div className="grain" aria-hidden="true" />
       <div className="reveal" ref={revealRef}>
         <Mesh
           progress={progress}
