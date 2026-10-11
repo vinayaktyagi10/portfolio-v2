@@ -249,3 +249,9 @@ Both were reverted rather than shipped. The root cause is that every correction 
 **Verified:** headless-Chromium crawl from `/` over the built site, both states: draft reaches only `/` with 0 broken links; published reaches all four pages with 0 broken internal links or anchors. The home page's built CSS and JS were byte-identical after `:root` moved to `src/tokens.css`.
 **Honest weakness:** the post pages repeat their `<head>` by hand (fonts, meta); a fifth page should copy an existing one. The site is dark-only, so writing pages are too.
 **My answer before seeing yours:** n/a.
+
+## 2026-10-11 — The tab icon is a piece of the tangle
+**Chose:** `scripts/favicon.mjs` draws nodes 0, 1, 2, 5, 7 (the three projects and the two decoys that close loops with them) and the six edges between them at `p = 0`, from the same `nodePos()` call `og.mjs` uses, on a `--deep-bg` tile. It writes `public/favicon.svg` and a 180px `public/apple-touch-icon.png`; every page now links both. This replaces Vite's template logo, which the writing pages showed, and the home page had no icon link at all.
+**Why:** The tab, the link preview and the opening frame are then one object. Of four crops rendered at 16/32/64px on dark and light tab bars: the full ten-node tangle was mush at 16px; a three-dots-on-a-line crop read cleanly but is the stock "share" glyph; a four-node chain clipped MIRAGE at the tile edge. The five-node knot is the only one with a closed loop, so it reads as a mesh rather than a stock icon.
+**Guard:** the script fits by dot extent, radius included, and fails if any dot comes within 2/32 of the tile edge; the first draft did clip MIRAGE, and that check caught it.
+**My answer before seeing yours:** n/a.
