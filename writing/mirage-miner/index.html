@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Stops mobile browsers turning byte counts and addresses into tap targets. -->
+    <meta name="format-detection" content="telephone=no, address=no, email=no" />
+    <title>What an SSH honeypot's logs led to: from a payload URL to a cryptocurrency miner</title>
+    <meta name="description" content="What my SSH honeypot Mirage captured, followed from a payload URL in its logs to a cryptocurrency miner I took apart in an isolated VM." />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="What an SSH honeypot's logs led to: from a payload URL to a cryptocurrency miner" />
+    <meta property="og:description" content="Following a payload URL from my own honeypot's logs to an XMRig-based cryptocurrency miner, fetched through Tor and taken apart in an isolated VM." />
+    <meta property="og:url" content="https://www.vtyagi.dev/writing/mirage-miner/" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/post.css" />
+  </head>
+  <body>
+    <!-- site-header -->
+    <main>
+    <article class="post">
+      <!-- draft-banner -->
+
+      <h1>What an SSH honeypot's logs led to: from a payload URL to a cryptocurrency miner</h1>
+      <p class="post-dates">Written 2026-10-11, last updated 2026-10-11<span class="sep" aria-hidden="true">·</span><!-- reading-time --></p>
+
+      <p class="post-note">This post is about data from my own SSH honeypot, Mirage. Attacker and payload addresses are defanged (<code>hxxp</code>, <code>[.]</code>). No malware samples are published, only hashes.</p>
+
+      <h2 id="why-i-built-mirage">Why I built Mirage</h2>
+
+      <p>I applied to Google Summer of Code with the Honeynet Project and was not selected, but I stayed curious about how honeypots actually work. Over the summer my friend Devang and I decided to build one together. Devang brought the ML side and I brought the infrastructure side, and the result is Mirage, a honeypot written in Go. We built it mainly to learn and experiment.</p>
+
+      <p>This write-up is the first time I have gone through what Mirage captured myself. I wanted to find out what attackers actually do once they get a shell, and what I could learn from it. One thing to keep in mind from the start: a row in the logs is one command line, a session is one connection, and a source IP is one address. They are different counts, and a source IP is still not an actor.</p>
+
+      <h2 id="the-filter-that-found-nothing">The filter that found nothing</h2>
+
+      <p>My first idea was simple. To find the malware attackers tried to download, I would look for commands that start with <code>wget</code> or <code>curl</code>. That found nothing: 0 of the 39 sessions in the first dataset that tried to download something. Each of those sessions had one command line containing a URL.</p>
+
+      <p>The reason is that Mirage stores a field called <code>parsed_command</code>, and it holds only the first word of the line. These lines started with <code>cd</code> or <code>uname</code>, with the <code>wget</code> further along. The full line is in another column, <code>raw_input_b64</code>, and my first search of that found nothing either, because the column is base64. I had to decode it before searching. Once I searched the decoded text for <code>http://</code> or <code>https://</code> anywhere in the line, the URLs appeared.</p>
+
+      <p>What I took from it is to check what a column actually contains before trusting a filter built on it.</p>
+
+      <h2 id="what-the-urls-showed">What the URLs showed</h2>
+
+      <p>In the first dataset, 4 of 146 source IPs (2.7%) tried a URL fetch. In the second dataset, from a different sensor and period, it was 49.5% of SSH source IPs, but almost all of that comes from one campaign. Take that campaign's 362 IPs out of both the count and the total, and 43 of the remaining 456 IPs (9.4%) tried a fetch. The two datasets are different sensors and windows, so I do not read the gap as a trend.</p>
+
+      <p>Before the URLs, the commands themselves looked like hardware recon: CPU count, memory, PCI devices, GPU. That fits a miner operator checking what a host is worth, but it is a hypothesis; the commands alone do not show intent.</p>
+
+      <p>One payload server, 217.60.195[.]113, showed up in both datasets, weeks apart, on sensors that did not run at the same time. That is not geographic targeting. One source IP used it in both, but the same address is not proof of the same actor. The server I actually fetched from, a different one, first appeared in my data on 2026-10-03, the same day as the loader's <code>Last-Modified</code> date.</p>
+
+      <h2 id="fetching-the-files-safely">Fetching the files safely</h2>
+
+      <p>This was my first time handling malware, and I learned most of it with an AI assistant's help. I made the setup safe in layers.</p>
+
+      <p>Everything was downloaded through Tor, so my home IP address was never exposed. The downloads happened inside a virtual machine with no route out. Firewall rules stop it from talking to anything except the Tor port, and it has no shared folders or clipboard with my machine. I fetched with plain downloads only: nothing was executed during the fetch, and the files were saved without the execute bit. Before running anything I took a snapshot I could return to if something went wrong.</p>
+
+      <p>Then I looked at the files with <code>strings</code>, <code>file</code> and similar tools to see what they were. When I did run the miner, I ran it inside the VM with its network link down, and restored the snapshot afterwards.</p>
+
+      <h2 id="what-the-miner-did">What the miner did</h2>
+
+      <p>The server handed out a loader script, a cleanup script and a UPX-packed miner built on XMRig.</p>
+
+      <p>The loader picks a random hidden file name, finds a writable directory, downloads the other pieces over HTTPS with certificate checks off, picks a binary to match the machine's architecture, and runs it. The cleanup script, <code>clean</code>, deletes crontab and shell-profile lines matching a list of patterns, stops two named services (<code>c3pool_miner</code> and <code>bot.service</code>) and empties <code>/tmp</code>, <code>/var/tmp</code> and <code>/dev/shm</code>. I read it as a competitor killer that removes other miners and bots before this one runs. That is my reading; the script does not say so.</p>
+
+      <p>I ran the miner once, in the VM with its network link down, under <code>strace</code>. What I observed: it forked and renamed itself so that <code>ps</code> showed <code>nginx: worker process</code>, although nginx is not installed and <code>/proc/PID/exe</code> pointed to the sample. It ran <code>crontab -r</code> and then installed an <code>@reboot</code> entry pointing at itself. And it tried TCP port 853 (DNS over TLS) on 13 hard-coded addresses in a tight loop with no backoff, about 1.3 million failed attempts in roughly six minutes. Eleven of those addresses belong to well-known public resolvers; two are ISP addresses whose owner I could not identify. All the connections failed, so nothing left the VM.</p>
+
+      <p>What I infer, and did not directly see: a watchdog that checks the main process is still alive; that the CPU load I saw was this retry loop and not hashing; and that the resolver list exists so the miner can still find its pool when plain DNS on port 53 is blocked.</p>
+
+      <h2 id="what-i-still-dont-know">What I still don't know</h2>
+
+      <p>There is a lot I did not find. I call it a cryptocurrency miner because the binary is an XMRig build with RandomX algorithm names. XMRig and RandomX point to Monero, but I did not find the pool or the wallet, so I cannot confirm which coin. I also do not know:</p>
+
+      <ul>
+      <li>the mining pool or the wallet;</li>
+      <li>whether the SSH code inside the binary spreads it (it is there; I did not exercise it);</li>
+      <li>what the process and binary scanning is for;</li>
+      <li>the family name (the loader contains the string &quot;redtail&quot;, which is weak evidence on its own);</li>
+      <li>whether real victims receive the same files. What I have is what a Tor exit was served on 2026-10-10.</li>
+      </ul>
+
+      <h2 id="what-i-got-wrong">What I got wrong</h2>
+
+      <p>I got several things wrong along the way, and these are the ones I learned the most from.</p>
+
+      <div class="table-wrap"><table>
+      <thead><tr><th>I thought</th><th>What was true</th></tr></thead>
+      <tbody>
+      <tr><td>About 5 of the 39 URL-bearing sessions would parse as <code>wget</code>/<code>curl</code></td><td>0</td></tr>
+      <tr><td><code>ps</code> CPU shows what the miner is doing now</td><td><code>ps</code> reports a lifetime average; <code>top</code> for two samples shows the current rate</td></tr>
+      <tr><td>Mirage splits quoted multi-line strings into separate commands (SSH)</td><td>The SSH splitter is quote-aware. The 21 <code>UserKnownHostsFile: command not found</code> sessions are on <strong>Telnet</strong>, where every line the bot sent was logged and answered as its own command. I had read the wrong sensor's code</td></tr>
+      <tr><td>One headline percentage describes the whole dataset</td><td>49.5% falls to 9.4% (43 of 456 IPs) without one campaign, and the datasets mix SSH and Telnet</td></tr>
+      </tbody>
+      </table></div>
+
+      <p>What these taught me about method: measure the thing itself and not a stand-in; write down the definition next to the number; check which sensor and protocol a symptom lives on before reading code; and when one bot is most of a count, say so and show the count without it.</p>
+
+      <h2 id="what-i-fixed-and-whats-next">What I fixed, and what's next</h2>
+
+      <p>Reading what attackers did with Mirage's answers showed where it behaved unlike a real Ubuntu host. Commands such as <code>sh</code>, <code>rm</code>, <code>case</code> and <code>for</code> answered &quot;command not found&quot;. I fixed these in two rounds: the first (v2) went live on 2026-10-10 at 22:54:06 UTC, and the second (v3) on 2026-10-11 at 07:57:17 UTC.</p>
+
+      <p>The evidence for the fixes is thin. The v2 window is 9 hours, with commands from only 12 SSH source IPs. In that window the failures I had fixed did not come back. That shows the commands now answer. It does not show the fixes cover what attackers try next, and it does not show that attackers behave differently. v3 is deployed and not yet measured; I will re-check around 2026-10-14 or 15 and update this post. I leave out the exact reply strings, because describing exactly how a honeypot answers wrongly helps the next person recognise it.</p>
+
+      <p>Next, I want to run the miner against a fake resolver I control to try to recover the pool, and fix the gaps I found while measuring: the Telnet quoting and a session lost to invalid UTF-8. Later, I want to turn this investigation into a pipeline where a person reviews and approves the findings in 15 to 20 minutes before anything is published. The automatic part would never run a sample outside the VM and never publish by itself.</p>
+
+      <h2 id="ai-assistance">AI assistance</h2>
+
+      <p>I used Claude throughout: Sonnet 5.5 for most of the back-and-forth (learning the tools, reading outputs, drafting and checking this write-up) and Opus for the code changes to Mirage described in <a href="/writing/mirage-miner/data/#further-hardening-of-mirage">section 7 of the data page</a>. I wrote queries 01 to 03 myself; the other queries (<code>adhoc_checks.sql</code>) were written by the assistant and are marked as such. The decisions, the safety setup and the conclusions are mine.</p>
+
+      <p>Every number, table, hash and indicator behind this post is on the <a href="/writing/mirage-miner/data/">data and method</a> page.</p>
+
+      <section class="post-changelog">
+        <h2 id="changelog">Changelog</h2>
+        <ul>
+          <li>2026-10-11: first version.</li>
+        </ul>
+      </section>
+    </article>
+    </main>
+    <!-- site-footer -->
+  </body>
+</html>

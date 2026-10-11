@@ -1,49 +1,4 @@
-:root {
-  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  /* One display face, used exactly twice: the name in the hero and the name
-     at the head of the surface. Everything else stays in the two working
-     faces, so the serif is the signature rather than the texture. */
-  --display: "Newsreader", "Iowan Old Style", Georgia, serif;
-
-  /* One hue, two depths. The mesh and the surface share a background: the
-     unravel is the tangle resolving into text, not a change of place. The
-     panel is the same water, further down. */
-  --deep-bg: #101a18;
-  --panel-bg: #070b09;
-
-  /* Surface type. Larger and lighter than the depth register; the calm comes
-     from size, weight and air rather than from low contrast. Ratios against
-     --deep-bg: 14.0 / 8.4 / 6.2 : 1. */
-  --surface-fg: #dfe6e2;
-  --surface-muted: #a7b5b0;
-  --surface-faint: #8b9c97;
-  --surface-line: #26332f;
-  --surface-dot: #4a5b57;
-
-  /* One accent, two strengths. Quiet on the surface, full brightness inside a
-     panel and on hover — clicking in is the signal getting stronger. */
-  --accent-quiet: #5a927e;
-  --accent: #5dcaa5;
-
-  --mesh-line: #223b36;
-  --mesh-dim: #2f6350;
-  --hero-name: #d8e4de;
-  /* Specified as #6e8377, which lands at 4.38:1 on --deep-bg — just under AA
-     at 10px. Four levels lighter, 4.67:1. */
-  --hero-tagline: #72887c;
-
-  /* Depth type. Denser and dimmer than the surface, but every value still
-     clears AA: 15.9 / 7.6 / 8.0 / 5.3 / 5.0 : 1 against --panel-bg. */
-  --panel-fg: #e2e8e5;
-  --panel-sub: #8fa5a0;
-  --panel-value: #93a9a4;
-  --panel-label: #6b8b84;
-  --panel-whisper: #628681;
-  --panel-line: #16302c;
-  --panel-rule: #0f211e;
-  --panel-edge: #1d3b35;
-}
+@import "./tokens.css";
 
 * { box-sizing: border-box; }
 
@@ -424,6 +379,25 @@ main {
   color: var(--surface-muted);
 }
 .experience ul li::before { content: "—"; position: absolute; left: 0; color: var(--surface-dot); }
+
+/* Same register as an experience entry: the title carries the weight, the
+   description and date sit back. */
+.writing-list { list-style: none; margin: 0; padding: 0; max-width: 46rem; }
+.writing-list li { margin-bottom: 1.75rem; }
+.writing-title { font-size: 1.1rem; line-height: 1.45; text-decoration-color: var(--surface-line); }
+.writing-desc { margin: 0.35rem 0 0.3rem; max-width: 62ch; font-size: 0.95rem; color: var(--surface-muted); }
+.writing-date { font-size: 11px; color: var(--surface-faint); }
+.writing-all { margin: 0; font-size: 0.9rem; }
+.draft-tag {
+  margin-left: 0.6rem;
+  padding: 0 0.4rem;
+  border: 1px dashed var(--accent-quiet);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 0.15em;
+  color: var(--surface-muted);
+}
 
 .open-source p, .contact p { margin: 0.35rem 0; max-width: 66ch; color: var(--surface-muted); }
 .contact { border-top: 1px solid var(--surface-line); padding-top: 2.25rem; }

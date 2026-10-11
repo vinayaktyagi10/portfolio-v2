@@ -1,0 +1,46 @@
+:root {
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* One display face, used exactly twice: the name in the hero and the name
+     at the head of the surface. Everything else stays in the two working
+     faces, so the serif is the signature rather than the texture. */
+  --display: "Newsreader", "Iowan Old Style", Georgia, serif;
+
+  /* One hue, two depths. The mesh and the surface share a background: the
+     unravel is the tangle resolving into text, not a change of place. The
+     panel is the same water, further down. */
+  --deep-bg: #101a18;
+  --panel-bg: #070b09;
+
+  /* Surface type. Larger and lighter than the depth register; the calm comes
+     from size, weight and air rather than from low contrast. Ratios against
+     --deep-bg: 14.0 / 8.4 / 6.2 : 1. */
+  --surface-fg: #dfe6e2;
+  --surface-muted: #a7b5b0;
+  --surface-faint: #8b9c97;
+  --surface-line: #26332f;
+  --surface-dot: #4a5b57;
+
+  /* One accent, two strengths. Quiet on the surface, full brightness inside a
+     panel and on hover — clicking in is the signal getting stronger. */
+  --accent-quiet: #5a927e;
+  --accent: #5dcaa5;
+
+  --mesh-line: #223b36;
+  --mesh-dim: #2f6350;
+  --hero-name: #d8e4de;
+  /* Specified as #6e8377, which lands at 4.38:1 on --deep-bg — just under AA
+     at 10px. Four levels lighter, 4.67:1. */
+  --hero-tagline: #72887c;
+
+  /* Depth type. Denser and dimmer than the surface, but every value still
+     clears AA: 15.9 / 7.6 / 8.0 / 5.3 / 5.0 : 1 against --panel-bg. */
+  --panel-fg: #e2e8e5;
+  --panel-sub: #8fa5a0;
+  --panel-value: #93a9a4;
+  --panel-label: #6b8b84;
+  --panel-whisper: #628681;
+  --panel-line: #16302c;
+  --panel-rule: #0f211e;
+  --panel-edge: #1d3b35;
+}

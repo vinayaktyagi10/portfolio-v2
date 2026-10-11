@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Stops mobile browsers turning byte counts and addresses into tap targets. -->
+    <meta name="format-detection" content="telephone=no, address=no, email=no" />
+    <title>What an SSH honeypot's logs led to: data and method</title>
+    <meta name="description" content="The full data, tables, hashes and indicators behind my write-up of what my SSH honeypot Mirage captured." />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="What an SSH honeypot's logs led to: data and method" />
+    <meta property="og:description" content="Every number, table, hash and indicator behind the Mirage write-up, with the method and its limits." />
+    <meta property="og:url" content="https://www.vtyagi.dev/writing/mirage-miner/data/" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/src/post.css" />
+  </head>
+  <body>
+    <!-- site-header -->
+    <main>
+    <article class="post">
+      <!-- draft-banner -->
+
+      <h1>What an SSH honeypot's logs led to: data and method</h1>
+      <p class="post-lede">The full numbers behind <a href="/writing/mirage-miner/">the story</a>.</p>
+      <p class="post-dates">Written 2026-10-11, last updated 2026-10-11<span class="sep" aria-hidden="true">·</span><!-- reading-time --></p>
+
+      <p class="post-note">This post is about data from my own SSH honeypot, Mirage. Attacker and payload addresses are defanged (<code>hxxp</code>, <code>[.]</code>). No malware samples are published, only hashes.</p>
+
+      <blockquote><p><strong>Status of this draft (2026-10-11).</strong> Every number comes from frozen data: the Frankfurt-era backup and a Nuremberg export cut at 2026-10-10 22:54:06 UTC. Queries 01 to 03 are mine; the other queries (<code>adhoc_checks.sql</code>) were written by an AI assistant. Its host table matches the output of my own queries 02 and 03; the other numbers from it (the SSH/Telnet split, the IP overlap, the failure counts) I have not re-derived myself. Everything is dated in UTC.</p></blockquote>
+
+      <h2 id="summary">Summary</h2>
+
+      <p>I run an SSH honeypot called Mirage. Looking for the payloads attackers tried to download, I found one server handing out a loader script and an XMRig-based cryptocurrency miner. The strings and algorithm names point to Monero, but I did not find the pool or the wallet. I fetched them through Tor into an isolated VM and took them apart without letting them reach the network.</p>
+
+      <ul>
+      <li>The obvious filter for downloads (<code>parsed_command</code> equal to <code>wget</code> or <code>curl</code>) caught <strong>0 of the 39</strong> sessions in the first dataset that tried to download something (each had one command line containing a URL), because that column holds only the first word of the line.</li>
+      <li>The miner renames itself to <code>nginx: worker process</code>, replaces the crontab with an <code>@reboot</code> entry, and tries to resolve its pool with DNS-over-TLS against 13 hard-coded resolvers (11 well-known public ones and 2 ISP addresses of unknown owner).</li>
+      <li>49.5% of the SSH source IPs in the second dataset tried a URL fetch, but one campaign accounts for almost all of it: without that campaign, 43 of the remaining 456 IPs (9.4%) did. The two datasets are different sensors and windows, so I do not read the gap to the first dataset's 2.7% as a trend.</li>
+      <li>Not established: the mining pool, the wallet, whether the SSH client inside the binary spreads it, and what the binary-scanning is for.</li>
+      <li>The files are what a Tor exit was served on 2026-10-10; the operator may serve something different to real victims.</li>
+      </ul>
+
+      <h2 id="data-and-scope">1. Data and scope</h2>
+
+      <p>I applied to Google Summer of Code with the Honeynet Project and was not selected, but I was curious how honeypots actually work. Over the summer my friend Devang and I decided to build one together: Devang brought the ML side and I brought the infrastructure side, and the result is Mirage. We built it mainly to learn and experiment. This write-up is the first time I have gone through what it captured myself, to find out what attackers actually do and what I can learn from it.</p>
+
+      <p>Mirage is an SSH honeypot written in Go. It accepts some weak logins, gives the attacker a fake Ubuntu shell built from a fixed list of commands, and records each session and each command line in Postgres. From 2026-09-29 a Telnet sensor runs beside it. A randomized hardware-deception experiment, assigned per source IP, started on 2026-09-27; I did not split any result below by experiment arm.</p>
+
+      <div class="table-wrap"><table>
+      <thead><tr><th></th><th>Dataset A (SSH, Frankfurt-era backup)</th><th>Dataset B (Nuremberg export, before the deploy)</th></tr></thead>
+      <tbody>
+      <tr><td>Sessions</td><td>154,806</td><td>261,266 (SSH 250,956; Telnet 10,310)</td></tr>
+      <tr><td>Session window</td><td>2026-06-16 to 2026-07-29</td><td>2026-08-30 to 2026-10-10 22:53</td></tr>
+      <tr><td>Command rows</td><td>9,555</td><td>76,603 (SSH 30,630; Telnet 45,973)</td></tr>
+      <tr><td>Command window</td><td>2026-07-11 to 2026-07-29</td><td>2026-08-30 to 2026-10-10 22:51</td></tr>
+      <tr><td>Sessions with a command</td><td>4,322</td><td>17,498 (SSH 9,876; Telnet 7,622)</td></tr>
+      <tr><td>Source IPs with a command</td><td>146</td><td>1,170 (SSH 818; Telnet 354)</td></tr>
+      <tr><td>Source IPs, any session</td><td>1,844</td><td>SSH 3,356</td></tr>
+      </tbody>
+      </table></div>
+
+      <ul>
+      <li>The backup carries no sensor name (<code>node_id</code> is just <code>Ubuntu</code>); the &quot;Frankfurt&quot; label comes from the backup date and which sensor ran then.</li>
+      <li>The two datasets do not overlap in time. Both sensors are in Germany.</li>
+      <li>A row is one command line. A session is one connection. A source IP is one address. They are not the same count: one bot can produce hundreds of sessions, so the unit I use for &quot;how many attackers&quot; is the source IP, and even that is not an actor.</li>
+      </ul>
+
+      <h2 id="what-attackers-do-first">2. What attackers do first</h2>
+
+      <p>Most sessions never get past login. Of the sessions that did run commands in dataset A, the most frequent first words were:</p>
+
+      <div class="table-wrap"><table>
+      <thead><tr><th><code>parsed_command</code></th><th>rows</th></tr></thead>
+      <tbody>
+      <tr><td><code>uname</code></td><td>4,369</td></tr>
+      <tr><td><code>uptime</code></td><td>1,484</td></tr>
+      <tr><td><code>nproc</code></td><td>1,463</td></tr>
+      <tr><td><code>export</code></td><td>1,349</td></tr>
+      <tr><td><code>cd</code></td><td>148</td></tr>
+      <tr><td><code>cat</code></td><td>133</td></tr>
+      <tr><td><code>lspci</code></td><td>76</td></tr>
+      <tr><td><code>/bin/./uname</code></td><td>61</td></tr>
+      <tr><td><code>echo</code></td><td>57</td></tr>
+      <tr><td><code>nvidia-smi</code></td><td>52</td></tr>
+      </tbody>
+      </table></div>
+
+      <p>Dataset B (SSH only) looks similar: <code>uname</code> 9,069, <code>export</code> 6,297, <code>nproc</code> 4,049, <code>uptime</code> 3,793, <code>echo</code> 1,291, <code>lspci</code> 743.</p>
+
+      <p>The pattern is hardware recon: how many CPUs, how much memory, which PCI devices, whether there is a GPU. That fits a miner operator checking what a host is worth, but it is a hypothesis; the commands alone do not show intent. A row is not a session and a session is not an attacker, so these counts say what was typed, not how many people typed it.</p>
+
+      <h2 id="finding-the-payload-urls">3. Finding the payload URLs</h2>
+
+      <p>My first idea was to filter on <code>parsed_command</code> for <code>wget</code> or <code>curl</code>. That found nothing, because <code>parsed_command</code> holds only the first word of the line, and these lines start with <code>cd</code> or <code>uname</code> with the <code>wget</code> further along. The full line is in <code>raw_input_b64</code>, so I searched that for <code>http://</code> or <code>https://</code> anywhere instead. My first attempt at that returned 0 rows because the column is base64, and I had to decode it before searching.</p>
+
+      <ul>
+      <li><code>parsed_command</code> is the first whitespace-separated word of the whole payload (<code>strings.Fields(payload.Command)[0]</code> in <code>server.go</code>).</li>
+      <li>Result: <strong>39 sessions in dataset A contain a URL, one command line each (95 URL mentions in all); the <code>wget</code>/<code>curl</code> filter matches 0 of them.</strong></li>
+      <li>Extraction: every <code>https?://…</code> match per command row, stopped at whitespace and <code>' &quot; &lt; &gt; ) ;</code>, grouped by host with distinct sessions and distinct source IPs (queries 02 and 03). Joining to <code>sessions</code> lost no URL rows (95 of 95 in A, 1,646 of 1,646 in B).</li>
+      </ul>
+
+      <p><strong>Dataset A (39 sessions, 5 payload hosts, 4 source IPs):</strong></p>
+
+      <div class="table-wrap"><table>
+      <thead><tr><th>Payload host</th><th>Sessions</th><th>Source IP</th><th>First to last seen</th></tr></thead>
+      <tbody>
+      <tr><td>217.60.195[.]113</td><td>18</td><td>130.12.180[.]51</td><td>07-11 to 07-29</td></tr>
+      <tr><td>83.168.69[.]141</td><td>17</td><td>83.168.69[.]141 (the host itself)</td><td>07-17 to 07-29</td></tr>
+      <tr><td>41.216.189[.]236</td><td>2</td><td>94.154.43[.]230</td><td>07-22 to 07-25</td></tr>
+      <tr><td>41.216.189[.]157</td><td>1</td><td>94.154.43[.]230</td><td>07-15</td></tr>
+      <tr><td>91.92.42[.]213</td><td>1</td><td>91.92.47[.]37</td><td>07-23</td></tr>
+      </tbody>
+      </table></div>
+
+      <ul>
+      <li>83.168.69[.]141's sessions come in pairs about 20 seconds apart. I tested whether the bot retried because Mirage's reply lacked its <code>PAYLOAD_DONE</code> marker: the marker was there, so that explanation is wrong. Cause unknown.</li>
+      <li>4 of 146 source IPs (2.7%) tried a URL fetch.</li>
+      </ul>
+
+      <p><strong>Dataset B:</strong> 1,088 SSH sessions from 405 of 818 source IPs (49.5%) contained a URL. This is <strong>not</strong> comparable to 2.7%: different window, and one campaign dominates (<code>154.70.152[.]216</code>: 573 sessions from 362 IPs, 09-07 to 09-28). Take those 362 IPs out of both the count and the total, and 43 of the remaining 456 IPs (9.4%) tried a URL fetch. Telnet adds 76 sessions from 37 IPs.</p>
+
+      <div class="table-wrap"><table>
+      <thead><tr><th>Payload host</th><th>Sessions</th><th>Source IPs</th><th>First to last seen</th></tr></thead>
+      <tbody>
+      <tr><td>154.70.152[.]216</td><td>573</td><td>362</td><td>09-07 to 09-28</td></tr>
+      <tr><td>103.160.59[.]94</td><td>33</td><td>28</td><td>09-01 to 10-08</td></tr>
+      <tr><td>217.60.102[.]5</td><td>24 (13 over Telnet)</td><td>13</td><td>10-03 to 10-10</td></tr>
+      <tr><td>217.60.103[.]56</td><td>27 (8 over Telnet)</td><td>10</td><td>09-12 to 10-02</td></tr>
+      <tr><td>185.93.89[.]72</td><td>9 (9 over Telnet)</td><td>8</td><td>09-30 to 10-10</td></tr>
+      <tr><td>39.108.50[.]35</td><td>125</td><td>5</td><td>10-04 to 10-10</td></tr>
+      <tr><td>83.168.69[.]95</td><td>95</td><td>3</td><td>09-24 to 10-10</td></tr>
+      <tr><td>66.116.196[.]142</td><td>61</td><td>3</td><td>10-04 to 10-07</td></tr>
+      </tbody>
+      </table></div>
+
+      <p>The two percentages still do not show URL fetching becoming more common. They show that it is common, and that one operator can dominate a count.</p>
+
+      <p><strong>The same payload host in both datasets.</strong> 217.60.195[.]113 appears in dataset A (07-11 to 07-29) and in dataset B (08-31 to 09-09). The sensors did not run at the same time, so this shows one operator's server reaching two places in Germany over several weeks, not geographic targeting. On the source side, 195 SSH source IPs appear in both datasets, 29 of them with commands in both. One of them, 130.12.180[.]51, used 217.60.195[.]113 as its payload host in both (18 sessions in A, 13 in B). The same address is not proof of the same actor.</p>
+
+      <h2 id="fetching-safely">4. Fetching safely</h2>
+
+      <p>This was my first time handling malware, and I learned most of it with an AI assistant's help. I made the setup safe in layers. The files were fetched through Tor, so my home IP address is never exposed. They were fetched inside a VM that has no access to my machine or the home network, and firewall rules stop it from talking to anything else. Before running anything I took a snapshot I could return to if something went wrong. I fetched with plain downloads only (no execution), then looked at the files with <code>strings</code>, <code>file</code> and similar tools to see what they were.</p>
+
+      <ul>
+      <li>Local QEMU/KVM VM (Debian 13), no shared folders, clipboard channel, USB redirection, sound or guest-agent channel.</li>
+      <li>Network: an isolated libvirt network (no forward element, 192.168.77.0/24). Host firewall (<code>nftables</code>): from the VM bridge, accept TCP 9050 only, drop everything else; drop forwarding in both directions. One <code>ufw</code> rule allows that same port, because <code>ufw</code>'s default deny is a separate chain and an <code>accept</code> in one chain does not override a later <code>drop</code>.</li>
+      <li>Egress: Tor SOCKS on the host, bound to the bridge address only. <code>curl --socks5-hostname</code> so Tor resolves names.</li>
+      <li>Rules: plain <code>GET</code> only; no probing; no executing during the fetch stage; no use of the credential embedded in one script; <code>--max-filesize</code>, <code>--max-redirs 0</code>, output to a file with the execute bit off.</li>
+      <li>Isolation tests from inside the VM: via Tor <code>IsTor: true</code>; <code>curl http://1.1.1.1</code> fails at once (no route); the host's Grafana port times out.</li>
+      <li>Snapshots: <code>clean-base</code> (no samples) and <code>pre-exec</code> (samples fetched and unpacked, nothing executed). After the one run of the miner I killed it, powered the VM off and reverted it to <code>pre-exec</code>, which also removed the <code>@reboot</code> crontab entry it had installed.</li>
+      </ul>
+
+      <p>Fetch outcomes:</p>
+
+      <div class="table-wrap"><table>
+      <thead><tr><th>Target</th><th>Outcome</th></tr></thead>
+      <tbody>
+      <tr><td>39.108.50[.]35/ezo</td><td>connect timeout, twice (20 s, then 60 s)</td></tr>
+      <tr><td>217.60.102[.]5 over plain HTTP</td><td>SOCKS reply 5, connection refused (wrong scheme: the scripts use HTTPS)</td></tr>
+      <tr><td>24.144.113[.]211:8443/zed</td><td>reachable; returned <code>ERROR: Expected 4 fields</code> four times, then held the connection open. Not a file server; I did not try to guess its protocol</td></tr>
+      <tr><td>hxxps://217.60.102[.]5/sh</td><td>HTTP 200, 2,312 bytes</td></tr>
+      <tr><td>…/clean</td><td>HTTP 200, 1,157 bytes</td></tr>
+      <tr><td>…/x86_64</td><td>HTTP 200, 1,989,056 bytes</td></tr>
+      </tbody>
+      </table></div>
+
+      <h2 id="what-was-captured">5. What was captured</h2>
+
+      <div class="table-wrap"><table>
+      <thead><tr><th>File</th><th>Size</th><th>SHA-256</th></tr></thead>
+      <tbody>
+      <tr><td><code>/sh</code> (loader)</td><td>2,312 B</td><td><code class="hash">917fcc9131c6e9ca16264a85afc62532297bb39eb9d37765dad536c7c8c7735c</code></td></tr>
+      <tr><td><code>/clean</code></td><td>1,157 B</td><td><code class="hash">3f3a11bafabb1a35db913cfe51995f2e357d049e268860175876ae5a93d23892</code></td></tr>
+      <tr><td><code>/x86_64</code> (as served, UPX-packed)</td><td>1,989,056 B</td><td><code class="hash">f0aa83bbbd2c75e2f71ec16029ee5fcfad59f3a8efa30a500b815f0f6c18d987</code></td></tr>
+      <tr><td><code>/x86_64</code> unpacked with <code>upx -d</code> 4.2.4</td><td>5,199,952 B</td><td><code class="hash">a0f85de525c9f1126dd701b4b9a50237ef6dd1605836da64e983e49a2c50d268</code></td></tr>
+      <tr><td>24.144.113[.]211:8443 error reply</td><td>100 B</td><td><code class="hash">f1694dcada06d484e30af380f5061a919d3a71b4ca9dabd33aa8649305629bea</code></td></tr>
+      </tbody>
+      </table></div>
+
+      <p><strong>Loader (read, not run) — observed:</strong> random hidden file name; downloads stages from the same server over HTTPS with certificate checks off; finds a writable directory by writing 2 MB; runs <code>clean</code>; chooses a binary by <code>uname -mp</code> (x86_64, i686, aarch64, armv7, riscv; tries all five if none matches); runs it with the first argument. The server's <code>Last-Modified</code> for the loader was 2026-10-03, the same day that host first appeared in my data.</p>
+
+      <p><strong><code>clean</code> — observed:</strong> removes immutable flags and then deletes lines matching <code>wget|curl|/dev/tcp|/tmp|\.sh|nc|bash -i|sh -i|base64 -d</code> from crontabs and shell profiles; stops <code>c3pool_miner</code> and <code>bot.service</code>; empties <code>/tmp</code>, <code>/var/tmp</code>, <code>/dev/shm</code>. The filter is crude (<code>nc</code> matches any line containing those two letters).</p>
+
+      <p><strong>Miner, static — observed:</strong> UPX-packed (marker present), statically linked; after unpacking, XMRig strings (<code>XMRIG_*</code> names and the donation hosts <code>donate.v2.xmrig.com</code> and <code>donate.ssl.xmrig.com</code>), RandomX algorithm names, <code>stratum+tcp://</code> and <code>stratum+ssl://%s</code> (the pool address is filled in at runtime), libssh2 symbols, reads of CPU, GPU, hugepage and DMI information. No wallet and no config file found.</p>
+
+      <p><strong>Miner, dynamic (one run, VM link down, <code>strace -f</code>) — observed:</strong></p>
+
+      <ul>
+      <li>forks and calls <code>setsid()</code>, renames itself, shows in <code>ps</code> as <code>nginx: worker process</code>. <code>/proc/PID/exe</code> points to the sample; nginx is not installed.</li>
+      <li>runs <code>crontab -r</code>, then installs <code>@reboot &lt;path to itself&gt;</code>.</li>
+      <li>repeatedly opens <code>/proc/</code>, resolves each process's executable and reads it.</li>
+      <li>tries TCP port 853 (DNS over TLS) on 13 hard-coded addresses in a tight loop with no backoff (about 1.3 million failed attempts in roughly six minutes). Eleven are public resolvers: Cloudflare 1.1.1.1 and 1.0.0.1, Google 8.8.8.8 and 8.8.4.4, Quad9 9.9.9.9, an address registered to IBM in Quad9's neighbourhood (9.9.10.10), Njalla (95.215.19.53) and four OpenNameServer nodes (217.160.70.42, 213.202.211.221, 81.169.136.222, 185.181.61.24). Two are ISP addresses whose owner I could not identify (80.152.203.134, 109.91.184.21).</li>
+      <li>all connections failed with &quot;network unreachable&quot;, so nothing left the VM.</li>
+      </ul>
+
+      <p><strong>Inferred (label as such):</strong> a watchdog (<code>kill(pid, 0)</code> on the main process); the CPU load seen was the DNS retry loop, not hashing; the resolver list exists so the miner can still find its pool when plain DNS (port 53) is blocked. The <code>clean</code> script is a competitor killer: it stops <code>c3pool_miner</code> and <code>bot.service</code> and strips matching lines from crontabs, so other miners and bots go before this one runs. That is my reading of what it does; the script does not say so. XMRig and RandomX point to Monero mining, but without a pool or wallet I cannot confirm which coin.</p>
+
+      <p><strong>Not established:</strong> pool hostname, wallet, whether the SSH code spreads the miner (present in the binary, not exercised), purpose of the process and binary scan, any family name (the loader contains the string &quot;redtail&quot;, weak evidence on its own), and whether real victims receive the same files.</p>
+
+      <h2 id="what-i-got-wrong">6. What I got wrong</h2>
+
+      <div class="table-wrap"><table>
+      <thead><tr><th>I thought</th><th>What was true</th></tr></thead>
+      <tbody>
+      <tr><td>About 5 of the 39 URL-bearing sessions would parse as <code>wget</code>/<code>curl</code></td><td>0</td></tr>
+      <tr><td>The bot at 83.168.69[.]141 retries because the reply lacked <code>PAYLOAD_DONE</code></td><td>The marker was there; cause unknown</td></tr>
+      <tr><td>The 217.60.195[.]113 bot comes back about once a day</td><td>Irregular gaps</td></tr>
+      <tr><td>Empty responses were a Mirage defect</td><td>The commands redirected output to <code>/dev/null</code> and backgrounded, so empty is correct</td></tr>
+      <tr><td><code>pkill</code> by name would stop the miner</td><td>It had renamed itself to <code>nginx</code></td></tr>
+      <tr><td><code>ps</code> CPU shows what the miner is doing now</td><td><code>ps</code> reports a lifetime average; <code>top</code> for two samples shows the current rate</td></tr>
+      <tr><td>Mirage splits quoted multi-line strings into separate commands (SSH)</td><td>The SSH splitter is quote-aware. The 21 <code>UserKnownHostsFile: command not found</code> sessions are on <strong>Telnet</strong>, where every line the bot sent was logged and answered as its own command. I had read the wrong sensor's code</td></tr>
+      <tr><td>One headline percentage describes the whole dataset</td><td>49.5% falls to 9.4% (43 of 456 IPs) without one campaign, and the datasets mix SSH and Telnet</td></tr>
+      <tr><td>My earlier counts of <code>sh</code>, <code>rm</code> and <code>case</code> failures were right</td><td>They did not reproduce on the frozen data (the table in section 7 has the real ones); I had used a narrower, unrecorded definition</td></tr>
+      </tbody>
+      </table></div>
+
+      <p>What these taught me about method: measure the thing itself and not a stand-in; write down the definition next to the number; check which sensor and protocol a symptom lives on before reading code; and when one bot is most of a count, say so and show the count without it.</p>
+
+      <h2 id="further-hardening-of-mirage">7. Further hardening of Mirage</h2>
+
+      <p>Reading what attackers did with Mirage's answers showed where it behaved unlike a real Ubuntu host. There are three versions of the sensor in this post: <strong>v1</strong> is every version before the first deploy: dataset B was captured by several earlier versions of the same code (the sensor was deployed on 2026-08-30 and updated on 09-05, 09-09, 09-11 and 09-29; <code>a1d60d1</code> ran from 2026-09-29 to the deploy), and dataset A came from an earlier sensor generation whose code version I did not check; <strong>v2</strong> (<code>2248461</code>, 12 commits) went live on 2026-10-10 at 22:54:06 UTC; <strong>v3</strong> (<code>9ed852e</code>, 4 commits) on 2026-10-11 at 07:57:17 UTC.</p>
+
+      <p>Counts below are SSH sessions in dataset B unless noted, with the number of source IPs behind them, because a few bots make most of the sessions.</p>
+
+      <div class="table-wrap"><table>
+      <thead><tr><th>Symptom</th><th>Before (v1): sessions / IPs</th><th>Cause</th><th>Fix</th><th>After</th></tr></thead>
+      <tbody>
+      <tr><td><code>sh</code>, <code>bash</code>, <code>rm</code>, <code>chmod</code>, <code>wget</code> answered &quot;command not found&quot;</td><td><code>sh</code> 238 / 120, <code>bash</code> 297 / 91, <code>rm</code> 130 / 91, <code>chmod</code> 45 / 2, <code>wget</code> 51 / 2</td><td>SSH shell had a fixed list of 23 commands; the fuller table was on for Telnet only</td><td>v2: file commands, <code>sh</code>/<code>bash</code>, and <code>wget</code>/<code>curl</code> that fail like a host without outbound access</td><td>v2: none of them again (SSH)</td></tr>
+      <tr><td><code>case</code>, <code>esac</code>, <code>if</code>, <code>{</code> answered &quot;command not found&quot;</td><td><code>case</code> 3,306 / 20, <code>esac</code> 3,044 / 18, <code>if</code> 199 / 117, <code>{</code> 35 / 29</td><td>No handling of shell keywords</td><td>v2: <code>if</code>, <code>{ }</code>, <code>case</code> parsed before a line runs</td><td>v2: none again (SSH)</td></tr>
+      <tr><td><code>for</code> loops</td><td>26 / 22</td><td>Same</td><td>v3: <code>for</code> and test comparisons</td><td>v2 still failed (5 rows); v3 not measured</td></tr>
+      <tr><td><code>perl</code> not found</td><td>396 / 10</td><td>Missing command</td><td>v3: <code>perl</code> that never runs code</td><td>v2: 29 rows; v3 not measured</td></tr>
+      <tr><td><code>echo -e</code> printed <code>-e </code> literally</td><td>678 / 11</td><td>Flags not interpreted</td><td>v3: <code>echo -n/-e/-E</code></td><td>v2: 58 rows; v3 not measured</td></tr>
+      <tr><td><code>ping</code> not found (Telnet)</td><td>740 sessions / 180 IPs (741 rows)</td><td>Missing command</td><td>v3: <code>ping</code> reporting total packet loss</td><td>v2: 72 rows; v3 not measured</td></tr>
+      <tr><td>Newline outside quotes did not separate commands</td><td>not proven</td><td>Splitter only knew <code>;</code>, <code>&amp;&amp;</code>, <code>||</code></td><td>v2: newlines separate statements</td><td>not measured</td></tr>
+      <tr><td>Multi-line quoted text on <strong>Telnet</strong> run line by line</td><td>21 / 20 (09-30 to 10-10)</td><td>Telnet delivers one line at a time and an open quote is not carried over (read from the data; not confirmed in the Telnet code)</td><td>none yet</td><td>open</td></tr>
+      <tr><td><code>parsed_command</code> is the first word of the whole line</td><td>0 of 39 URL-bearing lines matched <code>wget</code>/<code>curl</code>; <code>/bin/./uname</code> 61 rows (A)</td><td>Logging, not behaviour</td><td>v2: normalized first command and a new <code>command_chain</code> column</td><td>v2: <code>command_chain</code> filled on all 3,102 rows</td></tr>
+      <tr><td>A Telnet session was lost: invalid UTF-8 in attacker input hit a text column</td><td>1 in v2 logs</td><td>Input not sanitized before insert</td><td>none yet</td><td>open</td></tr>
+      </tbody>
+      </table></div>
+
+      <p><strong>Not a defect.</strong> Empty responses to lines ending in <code>&gt;/dev/null 2&gt;&amp;1 &amp;</code> are what a real shell prints.</p>
+
+      <p><strong>What I can and cannot say.</strong> The v2 window is 9 hours: 3,111 SSH sessions, but only 285 SSH command rows from 12 source IPs (Telnet: 279 sessions, 2,817 rows). In that window the failures I had fixed did not recur. That shows the commands now answer; with 12 IPs it does not show the fixes cover what attackers will try next, and it does not show whether attackers behave differently. <code>wget</code> and <code>curl</code> after the fix have not been exercised by a real attempt yet.</p>
+
+      <p><strong>What is still untested.</strong> v3 (<code>for</code> loops, <code>ping</code>, <code>perl</code>, <code>echo -e</code>) is deployed and I expect it to close the gaps above, but I have not measured it, and v2 itself is thinner than I would like. I will rerun the same checks on the v3 window in three to four days (around 2026-10-14 or 15) and update this post with whether the fixes held.</p>
+
+      <p><strong>Fingerprinting.</strong> Describing exactly how a honeypot answers wrongly helps the next person recognise it. I describe the gap classes and leave out the exact reply strings.</p>
+
+      <h2 id="detection-ideas-and-indicators">8. Detection ideas and indicators</h2>
+
+      <ul>
+      <li><strong>Masquerade.</strong> Alert when a process named <code>nginx: worker process</code> has a <code>/proc/PID/exe</code> that is not an nginx binary. Test: in a lab VM, run any harmless program that renames itself to <code>nginx: worker process</code> and check that the rule fires, and that a real nginx does not trigger it.</li>
+      <li><strong>DNS-over-TLS from a host that never uses it.</strong> Alert on outbound TCP 853 from hosts with no resolver configured for DoT. Test: in a lab, send TCP 853 traffic from a plain host and from one configured for DoT.</li>
+      <li><strong>Crontab replacement.</strong> Alert on <code>crontab -r</code> followed within seconds by <code>crontab -</code> that installs an <code>@reboot</code> entry pointing into a non-standard directory. Test: replay the pair in the lab and compare with a normal <code>crontab -e</code>.</li>
+      </ul>
+
+      <p>Indicators as of 2026-10-10 (UTC), defanged:</p>
+
+      <ul>
+      <li>Payload server: <code>217.60.102[.]5</code> (<code>/sh</code>, <code>/clean</code>, <code>/x86_64</code>); same-path family on <code>217.60.103[.]56</code> and <code>217.60.195[.]113</code>.</li>
+      <li>Other payload hosts seen: <code>154.70.152[.]216</code>, <code>103.160.59[.]94</code>, <code>185.93.89[.]72</code>, <code>39.108.50[.]35</code>, <code>83.168.69[.]95</code>, <code>83.168.69[.]141</code>, <code>66.116.196[.]142</code>, <code>160.119.66[.]206</code>, <code>213.232.114[.]14</code>, <code>41.216.189[.]157</code>, <code>41.216.189[.]236</code>, <code>91.92.42[.]213</code>.</li>
+      <li>Hashes: the table in section 5.</li>
+      </ul>
+
+      <h2 id="limits-and-what-i-would-do-next">9. Limits and what I would do next</h2>
+
+      <ul>
+      <li>One fetch per URL, through Tor; no check that victims get the same file.</li>
+      <li>Session counts are inflated by a few bots; the unit is the source IP, and an IP is not an actor.</li>
+      <li>Dataset B mixes SSH and Telnet. I split the key numbers by protocol; the URL host table still includes Telnet sessions where marked.</li>
+      <li>Experiment arms are not accounted for.</li>
+      <li>v2 evidence is thin (12 SSH source IPs in nine hours) and v3 is unmeasured.</li>
+      <li>Next: measure v3 over several days; recover the pool by running the miner against a fake resolver I control; fix the Telnet quoting and the invalid-UTF-8 save error; re-measure.</li>
+      <li>Later: turn this investigation into a pipeline. New captured payloads would be handed to the isolated VM automatically, analyzed (static first, then a controlled run), and summarized into a short report. A person reviews it in 15 to 20 minutes and approves, rejects or edits it before anything is published. The automatic part never executes a sample outside the VM and never publishes by itself.</li>
+      </ul>
+
+      <h2 id="reproduce">Reproduce</h2>
+
+      <ol>
+      <li>Dataset A: the Frankfurt-era backup <code>mirage-20260729T094153Z.sql.gz</code> restored into a scratch Postgres 16 container.</li>
+      <li>Dataset B: <code>nuremberg-slice-20261011-sessions.csv.gz</code> and <code>-commands.csv.gz</code> (sha256 in <code>data/raw/nuremberg-slice-20261011.sha256</code>), loaded into a scratch container, from a read-only <code>REPEATABLE READ</code> export of sessions that started before 2026-10-10T22:54:06Z. The live count for that window was identical (261,266 sessions, 76,603 rows) a few hours later.</li>
+      <li>Queries <code>01_url_rows.sql</code>, <code>02_url_inventory.sql</code>, <code>03_source_ips.sql</code> (mine) and <code>adhoc_checks.sql</code> (AI-written). Saved outputs of 02 and 03 are in <code>results/</code>; the output of 01 contains attacker-supplied text and is not published.</li>
+      <li>The overlap between datasets is two sorted lists of distinct IPs and <code>comm -12</code>.</li>
+      </ol>
+
+      <p>The repository with these queries is not public yet. To rerun the main count on your own Mirage data without it: decode <code>raw_input_b64</code> from base64, match every <code>https?://…</code> in each command row (stopping at whitespace and <code>' " &lt; &gt; ) ;</code>), join to <code>sessions</code>, and group by host with distinct sessions and distinct source IPs.</p>
+
+      <!-- repo-link -->
+
+      <p><strong>AI assistance.</strong> I used Claude throughout: Sonnet 5.5 for most of the back-and-forth (learning the tools, reading outputs, drafting and checking this write-up) and Opus for the code changes to Mirage described in section 7. I wrote queries 01 to 03 myself; the other queries (<code>adhoc_checks.sql</code>) were written by the assistant and are marked as such. The decisions, the safety setup and the conclusions are mine.</p>
+
+      <section class="post-changelog">
+        <h2 id="changelog">Changelog</h2>
+        <ul>
+          <li>2026-10-11: first version.</li>
+        </ul>
+      </section>
+    </article>
+    </main>
+    <!-- site-footer -->
+  </body>
+</html>

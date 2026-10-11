@@ -1,4 +1,8 @@
 import { experience, skills } from "../data";
+import { listedPosts, postHref } from "../posts";
+
+// Drafts are listed by the dev server only, matching which pages get built.
+const posts = listedPosts(import.meta.env.DEV);
 
 export default function BelowFold() {
   return (
@@ -46,6 +50,29 @@ export default function BelowFold() {
           ))}
         </ul>
       </section>
+
+      {/* Hidden until something is published, so the deployed page never
+          links to a writing index with nothing on it. */}
+      {posts.length > 0 && (
+        <section className="block writing" id="writing">
+          <h2>Writing</h2>
+          <ul className="writing-list">
+            {posts.map((post) => (
+              <li key={post.slug}>
+                <a className="writing-title" href={postHref(post)}>
+                  {post.title}
+                </a>
+                {!post.published && <span className="mono draft-tag">Draft</span>}
+                <p className="writing-desc">{post.description}</p>
+                <span className="mono writing-date">{post.date}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="writing-all">
+            <a href="/writing/">All writing</a>
+          </p>
+        </section>
+      )}
 
       <section className="block open-source">
         <h2>Open source</h2>
