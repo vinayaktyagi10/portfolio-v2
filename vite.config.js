@@ -6,9 +6,9 @@ import { POSTS, listedPosts, postHref } from './src/posts.js'
 const page = (path) => fileURLToPath(new URL(path, import.meta.url))
 
 // Link to the mirage-research repo, rendered where a post has
-// `<!-- repo-link -->`. Keep null while the repo is private; set it to
-// 'https://github.com/vinayaktyagi10/mirage-research' once it is public.
-const REPO_URL = null
+// `<!-- repo-link -->`. Pinned to the tag the post describes, so the link
+// keeps matching the text when the repo moves on. null hides it.
+const REPO_URL = 'https://github.com/vinayaktyagi10/mirage-research/tree/writeup-v1.1'
 
 const esc = (s) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
