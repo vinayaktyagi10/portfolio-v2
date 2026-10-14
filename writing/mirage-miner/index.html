@@ -106,7 +106,7 @@
 
       <p>I measured v3 on 2026-10-14, after about 68 hours: none of the commands I had fixed answered "command not found" any more. That is still thin evidence. <code>perl</code> came from one IP, every <code>ping</code> was bare with no address, and new gaps showed up, such as <code>nproc</code> and <code>uptime</code>. Whether attackers stay longer is not measured. The details are in <a href="/writing/mirage-miner/data/#further-hardening-of-mirage">section 7 of the data page</a>. I leave out the exact reply strings, because describing exactly how a honeypot answers wrongly helps the next person recognise it.</p>
 
-      <p>Next, I want to fix the invalid-UTF-8 save error on Telnet first (1 lost session in v2, 31 in v3), then add the missing commands, then work on the Telnet quoting. I also want to run the miner against a fake resolver I control to try to recover the pool. Later, I want to turn this investigation into a pipeline where a person reviews and approves the findings in 15 to 20 minutes before anything is published. The automatic part would never run a sample outside the VM and never publish by itself.</p>
+      <p>Next, I want to fix the invalid-UTF-8 save error on Telnet first (1 lost session in v2, 31 in v3), then add the missing commands, then work on the Telnet quoting. I also want to run the miner against a fake resolver I control to try to recover the pool. Later, I want to turn this investigation into a pipeline where a person reviews and approves the findings in 15 to 20 minutes before anything is published.</p>
 
       <h2 id="ai-assistance">AI assistance</h2>
 
