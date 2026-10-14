@@ -27,7 +27,7 @@
 
       <h1>What an SSH honeypot's logs led to: data and method</h1>
       <p class="post-lede">The full numbers behind <a href="/writing/mirage-miner/">the story</a>.</p>
-      <p class="post-dates">Written 2026-10-11, last updated 2026-10-11<span class="sep" aria-hidden="true">·</span><!-- reading-time --></p>
+      <p class="post-dates">Written 2026-10-11, last updated 2026-10-14<span class="sep" aria-hidden="true">·</span><!-- reading-time --></p>
 
       <p class="post-note">This post is about data from my own SSH honeypot, Mirage. Attacker and payload addresses are defanged (<code>hxxp</code>, <code>[.]</code>). No malware samples are published, only hashes.</p>
 
@@ -232,22 +232,34 @@
       <tbody>
       <tr><td><code>sh</code>, <code>bash</code>, <code>rm</code>, <code>chmod</code>, <code>wget</code> answered &quot;command not found&quot;</td><td><code>sh</code> 238 / 120, <code>bash</code> 297 / 91, <code>rm</code> 130 / 91, <code>chmod</code> 45 / 2, <code>wget</code> 51 / 2</td><td>SSH shell had a fixed list of 23 commands; the fuller table was on for Telnet only</td><td>v2: file commands, <code>sh</code>/<code>bash</code>, and <code>wget</code>/<code>curl</code> that fail like a host without outbound access</td><td>v2: none of them again (SSH)</td></tr>
       <tr><td><code>case</code>, <code>esac</code>, <code>if</code>, <code>{</code> answered &quot;command not found&quot;</td><td><code>case</code> 3,306 / 20, <code>esac</code> 3,044 / 18, <code>if</code> 199 / 117, <code>{</code> 35 / 29</td><td>No handling of shell keywords</td><td>v2: <code>if</code>, <code>{ }</code>, <code>case</code> parsed before a line runs</td><td>v2: none again (SSH)</td></tr>
-      <tr><td><code>for</code> loops</td><td>26 / 22</td><td>Same</td><td>v3: <code>for</code> and test comparisons</td><td>v2 still failed (5 rows); v3 not measured</td></tr>
-      <tr><td><code>perl</code> not found</td><td>396 / 10</td><td>Missing command</td><td>v3: <code>perl</code> that never runs code</td><td>v2: 29 rows; v3 not measured</td></tr>
-      <tr><td><code>echo -e</code> printed <code>-e </code> literally</td><td>678 / 11</td><td>Flags not interpreted</td><td>v3: <code>echo -n/-e/-E</code></td><td>v2: 58 rows; v3 not measured</td></tr>
-      <tr><td><code>ping</code> not found (Telnet)</td><td>740 sessions / 180 IPs (741 rows)</td><td>Missing command</td><td>v3: <code>ping</code> reporting total packet loss</td><td>v2: 72 rows; v3 not measured</td></tr>
+      <tr><td><code>for</code> loops</td><td>26 / 22</td><td>Same</td><td>v3: <code>for</code> and test comparisons</td><td>v2 still failed (5 rows); v3: none (1,132 rows, 13 IPs)</td></tr>
+      <tr><td><code>perl</code> not found</td><td>396 / 10</td><td>Missing command</td><td>v3: <code>perl</code> that never runs code</td><td>v2: 29 rows; v3: none, but all 114 rows from one IP</td></tr>
+      <tr><td><code>echo -e</code> printed <code>-e </code> literally</td><td>678 / 11</td><td>Flags not interpreted</td><td>v3: <code>echo -n/-e/-E</code></td><td>v2: 58 rows; v3: none</td></tr>
+      <tr><td><code>ping</code> not found (Telnet)</td><td>740 sessions / 180 IPs (741 rows)</td><td>Missing command</td><td>v3: <code>ping</code> reporting total packet loss</td><td>v2: 72 rows; v3: none, but every call was a bare <code>ping</code> with no address</td></tr>
       <tr><td>Newline outside quotes did not separate commands</td><td>not proven</td><td>Splitter only knew <code>;</code>, <code>&amp;&amp;</code>, <code>||</code></td><td>v2: newlines separate statements</td><td>not measured</td></tr>
-      <tr><td>Multi-line quoted text on <strong>Telnet</strong> run line by line</td><td>21 / 20 (09-30 to 10-10)</td><td>Telnet delivers one line at a time and an open quote is not carried over (read from the data; not confirmed in the Telnet code)</td><td>none yet</td><td>open</td></tr>
+      <tr><td>Multi-line quoted text on <strong>Telnet</strong> run line by line</td><td>21 / 20 (09-30 to 10-10); v3: 4 / 4</td><td>Telnet delivers one line at a time and an open quote is not carried over (read from the data; not confirmed in the Telnet code)</td><td>none yet</td><td>open</td></tr>
       <tr><td><code>parsed_command</code> is the first word of the whole line</td><td>0 of 39 URL-bearing lines matched <code>wget</code>/<code>curl</code>; <code>/bin/./uname</code> 61 rows (A)</td><td>Logging, not behaviour</td><td>v2: normalized first command and a new <code>command_chain</code> column</td><td>v2: <code>command_chain</code> filled on all 3,102 rows</td></tr>
-      <tr><td>A Telnet session was lost: invalid UTF-8 in attacker input hit a text column</td><td>1 in v2 logs</td><td>Input not sanitized before insert</td><td>none yet</td><td>open</td></tr>
+      <tr><td>A Telnet session was lost: invalid UTF-8 in attacker input hit a text column</td><td>1 in v2 logs</td><td>Input not sanitized before insert</td><td>none yet</td><td>open; v3: 31 lost sessions in the Telnet log</td></tr>
       </tbody>
       </table></div>
 
       <p><strong>Not a defect.</strong> Empty responses to lines ending in <code>&gt;/dev/null 2&gt;&amp;1 &amp;</code> are what a real shell prints.</p>
 
-      <p><strong>What I can and cannot say.</strong> The v2 window is 9 hours: 3,111 SSH sessions, but only 285 SSH command rows from 12 source IPs (Telnet: 279 sessions, 2,817 rows). In that window the failures I had fixed did not recur. That shows the commands now answer; with 12 IPs it does not show the fixes cover what attackers will try next, and it does not show whether attackers behave differently. <code>wget</code> and <code>curl</code> after the fix have not been exercised by a real attempt yet.</p>
+      <p><strong>v2 window (9 hours).</strong> 3,111 SSH sessions, but only 285 SSH command rows from 12 source IPs (Telnet: 279 sessions, 2,817 rows). The failures I had fixed did not recur, which says little with 12 IPs.</p>
 
-      <p><strong>What is still untested.</strong> v3 (<code>for</code> loops, <code>ping</code>, <code>perl</code>, <code>echo -e</code>) is deployed and I expect it to close the gaps above, but I have not measured it, and v2 itself is thinner than I would like. I will rerun the same checks on the v3 window in three to four days (around 2026-10-14 or 15) and update this post with whether the fixes held.</p>
+      <p><strong>v3 update (measured 2026-10-14 04:22 UTC; v3 <code>9ed852e</code>, live since 2026-10-11 07:57:17 UTC, about 68 hours).</strong> Queries are AI-written (<code>sql/v3_checks.sql</code>, same &quot;command not found&quot; definition as before). SSH: 3,138 command rows, 577 sessions, 73 IPs. Telnet: 115,276 rows, 4,458 sessions, 217 IPs, inflated by scanner campaigns.</p>
+
+      <p><em>What I expected.</em> I fixed commands that returned &quot;not found&quot;, such as <code>perl</code>. I expected them to work and give realistic output, which would make the honeypot more realistic and keep attackers logged for longer. The &quot;longer&quot; part is a hypothesis; I have not measured it.</p>
+
+      <p><em>How I decided a fix held.</em> I counted rows whose response says <code>&lt;name&gt;: command not found</code> in real traffic after the deploy. I used real traffic because I needed to see what the bots were trying, and a test I wrote would not show that. Result (observed): zero such rows for <code>sh</code>, <code>bash</code>, <code>rm</code>, <code>chmod</code>, <code>wget</code>, <code>curl</code>, <code>case</code>, <code>esac</code>, <code>if</code>, <code>{</code>, <code>for</code>, <code>kill</code>, <code>mkdir</code>, <code>touch</code>, <code>ping</code> and <code>perl</code>, on SSH and Telnet. <code>echo -e</code> no longer prints a literal <code>-e </code>. <code>for</code> was exercised by 1,132 rows from 13 IPs.</p>
+
+      <p><em>What the zero does not tell me.</em> Whether attackers stay longer: not measured. <code>perl</code> came from one IP, so one caller exercised it. <code>ping</code> has not been used with a real address yet; all 1,112 calls were bare <code>ping</code>. <code>wget</code>/<code>curl</code> real attempts are still thin (3 first-word rows, all Telnet). The window is 68 hours and one bot supplies most SSH rows.</p>
+
+      <p><em>New gaps (observed, SSH).</em> <code>nproc</code> (45 of 46 calls, 1 IP), <code>uptime</code> (19 rows, 3 IPs), <code>cut</code>, <code>awk</code>, <code>egrep</code>, <code>chattr</code> still answer &quot;not found&quot;. <code>break</code> inside a <code>for</code> loop is not handled, so the loop does not stop. <code>curl</code> and <code>wget</code> inside parentheses fail, though plain <code>curl</code> and <code>wget</code> work. <code>nproc</code> is among the most common recon commands in my data; I infer an attacker hits it early, but the data shows it is common, not that it comes first.</p>
+
+      <p><em>Is Mirage more convincing?</em> Fewer known tells: yes. More convincing overall: not established. I will not call it convincing until sessions are longer and the commands attackers actually send are supported. Measuring that would need a v1 versus v3 comparison of session length and commands per IP, with the dominant bots removed and the experiment arm accounted for.</p>
+
+      <p><em>Next.</em> Fix the Telnet invalid-UTF-8 save error first (1 lost session in v2, 31 in v3, the only item that loses data), then add the unsupported commands, then work on Telnet quoting. Telnet has had less work than SSH; I have not yet checked that in the code.</p>
 
       <p><strong>Fingerprinting.</strong> Describing exactly how a honeypot answers wrongly helps the next person recognise it. I describe the gap classes and leave out the exact reply strings.</p>
 
@@ -274,10 +286,19 @@
       <li>Session counts are inflated by a few bots; the unit is the source IP, and an IP is not an actor.</li>
       <li>Dataset B mixes SSH and Telnet. I split the key numbers by protocol; the URL host table still includes Telnet sessions where marked.</li>
       <li>Experiment arms are not accounted for.</li>
-      <li>v2 evidence is thin (12 SSH source IPs in nine hours) and v3 is unmeasured.</li>
-      <li>Next: measure v3 over several days; recover the pool by running the miner against a fake resolver I control; fix the Telnet quoting and the invalid-UTF-8 save error; re-measure.</li>
+      <li>v2 evidence is thin (12 SSH source IPs in nine hours); v3 covers 68 hours and 73 SSH source IPs, and its <code>perl</code> and <code>ping</code> paths were barely exercised.</li>
+      <li>Next: add the missing commands and re-measure; recover the pool by running the miner against a fake resolver I control; fix the Telnet quoting and the invalid-UTF-8 save error; re-measure.</li>
       <li>Later: turn this investigation into a pipeline. New captured payloads would be handed to the isolated VM automatically, analyzed (static first, then a controlled run), and summarized into a short report. A person reviews it in 15 to 20 minutes and approves, rejects or edits it before anything is published. The automatic part never executes a sample outside the VM and never publishes by itself.</li>
       </ul>
+
+      <section class="post-changelog">
+      <h2 id="changelog">Changelog</h2>
+
+      <ul>
+      <li>2026-10-14: v3 measured (section 7, &quot;v3 update&quot;). Targeted &quot;not found&quot; failures gone; new gaps listed; UTF-8 save error rose to 31 on Telnet. Table cells for v3 filled in.</li>
+      <li>2026-10-11: first publication.</li>
+      </ul>
+      </section>
 
       <h2 id="reproduce">Reproduce</h2>
 
@@ -293,13 +314,6 @@
       <!-- repo-link -->
 
       <p><strong>AI assistance.</strong> I used Claude throughout: Sonnet 5.5 for most of the back-and-forth (learning the tools, reading outputs, drafting and checking this write-up) and Opus for the code changes to Mirage described in section 7. I wrote queries 01 to 03 myself; the other queries (<code>adhoc_checks.sql</code>) were written by the assistant and are marked as such. The decisions, the safety setup and the conclusions are mine.</p>
-
-      <section class="post-changelog">
-        <h2 id="changelog">Changelog</h2>
-        <ul>
-          <li>2026-10-11: first version.</li>
-        </ul>
-      </section>
     </article>
     </main>
     <!-- site-footer -->

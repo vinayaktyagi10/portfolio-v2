@@ -26,7 +26,7 @@
       <!-- draft-banner -->
 
       <h1>What an SSH honeypot's logs led to: from a payload URL to a cryptocurrency miner</h1>
-      <p class="post-dates">Written 2026-10-11, last updated 2026-10-11<span class="sep" aria-hidden="true">·</span><!-- reading-time --></p>
+      <p class="post-dates">Written 2026-10-11, last updated 2026-10-14<span class="sep" aria-hidden="true">·</span><!-- reading-time --></p>
 
       <p class="post-note">This post is about data from my own SSH honeypot, Mirage. Attacker and payload addresses are defanged (<code>hxxp</code>, <code>[.]</code>). No malware samples are published, only hashes.</p>
 
@@ -102,9 +102,11 @@
 
       <p>Reading what attackers did with Mirage's answers showed where it behaved unlike a real Ubuntu host. Commands such as <code>sh</code>, <code>rm</code>, <code>case</code> and <code>for</code> answered &quot;command not found&quot;. I fixed these in two rounds: the first (v2) went live on 2026-10-10 at 22:54:06 UTC, and the second (v3) on 2026-10-11 at 07:57:17 UTC.</p>
 
-      <p>The evidence for the fixes is thin. The v2 window is 9 hours, with commands from only 12 SSH source IPs. In that window the failures I had fixed did not come back. That shows the commands now answer. It does not show the fixes cover what attackers try next, and it does not show that attackers behave differently. v3 is deployed and not yet measured; I will re-check around 2026-10-14 or 15 and update this post. I leave out the exact reply strings, because describing exactly how a honeypot answers wrongly helps the next person recognise it.</p>
+      <p>The evidence for the fixes is thin. The v2 window is 9 hours, with commands from only 12 SSH source IPs. In that window the failures I had fixed did not come back. That shows the commands now answer. It does not show the fixes cover what attackers try next, and it does not show that attackers behave differently.</p>
 
-      <p>Next, I want to run the miner against a fake resolver I control to try to recover the pool, and fix the gaps I found while measuring: the Telnet quoting and a session lost to invalid UTF-8. Later, I want to turn this investigation into a pipeline where a person reviews and approves the findings in 15 to 20 minutes before anything is published. The automatic part would never run a sample outside the VM and never publish by itself.</p>
+      <p>I measured v3 on 2026-10-14, after about 68 hours: none of the commands I had fixed answered "command not found" any more. That is still thin evidence. <code>perl</code> came from one IP, every <code>ping</code> was bare with no address, and new gaps showed up, such as <code>nproc</code> and <code>uptime</code>. Whether attackers stay longer is not measured. The details are in <a href="/writing/mirage-miner/data/#further-hardening-of-mirage">section 7 of the data page</a>. I leave out the exact reply strings, because describing exactly how a honeypot answers wrongly helps the next person recognise it.</p>
+
+      <p>Next, I want to fix the invalid-UTF-8 save error on Telnet first (1 lost session in v2, 31 in v3), then add the missing commands, then work on the Telnet quoting. I also want to run the miner against a fake resolver I control to try to recover the pool. Later, I want to turn this investigation into a pipeline where a person reviews and approves the findings in 15 to 20 minutes before anything is published. The automatic part would never run a sample outside the VM and never publish by itself.</p>
 
       <h2 id="ai-assistance">AI assistance</h2>
 
@@ -115,6 +117,7 @@
       <section class="post-changelog">
         <h2 id="changelog">Changelog</h2>
         <ul>
+          <li>2026-10-14: v3 measured; updated the last section.</li>
           <li>2026-10-11: first version.</li>
         </ul>
       </section>
